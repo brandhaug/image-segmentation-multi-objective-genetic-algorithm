@@ -1,0 +1,31 @@
+.anchorpane {
+    -fx-background-color: #ffffff;
+}
+
+.vbox {
+    -fx-background-color: #f6f8ff;
+    -fx-spacing: 10;
+}
+
+.button {
+    -fx-pref-width: 100;
+    -fx-font-family: "Open Sans";
+    -fx-font-weight: bold;
+    -fx-background-color: #eaeef1;
+    -fx-padding: 0.5em 1em;
+    -fx-border-color: #999999;
+    -fx-text-fill: #222222;
+    -fx-border-radius: 3px;
+}
+
+.button:hover {
+    -fx-background-color: #dadee1;
+    -fx-cursor: hand;
+}
+
+.label {
+}
+
+.combo-box {
+    -fx-padding: .35em 1em;
+}
