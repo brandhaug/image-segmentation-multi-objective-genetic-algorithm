@@ -96,7 +96,7 @@ public class Controller {
 
     private void initializeImageSelector() {
         ClassLoader classLoader = getClass().getClassLoader();
-        File folder = new File(Objects.requireNonNull(classLoader.getResource("images")).getFile());
+        File folder = new File(Objects.requireNonNull(classLoader.getResource("resources/images")).getFile());
         File[] imageFiles = folder.listFiles();
         Arrays.sort(Objects.requireNonNull(imageFiles));
 

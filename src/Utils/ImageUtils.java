@@ -22,7 +22,7 @@ public class ImageUtils {
 
     private BufferedImage readImage(String fileName) throws IOException {
         ClassLoader classLoader = getClass().getClassLoader();
-        return ImageIO.read(new File(Objects.requireNonNull(classLoader.getResource("images/" + fileName)).getFile()));
+        return ImageIO.read(new File(Objects.requireNonNull(classLoader.getResource("resources/images/" + fileName)).getFile()));
     }
 
     private List<Color> parseImage(BufferedImage image) {

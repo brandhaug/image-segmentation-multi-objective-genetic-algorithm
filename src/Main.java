@@ -8,8 +8,8 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("View.fxml"));
-        root.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
+        Parent root = FXMLLoader.load(getClass().getResource("resources/View.fxml"));
+        root.getStylesheets().add(getClass().getResource("resources/styles.css").toExternalForm());
         primaryStage.setTitle("Image Segmentation - MOGA");
         primaryStage.setScene(new Scene(root));
         primaryStage.setResizable(false);
