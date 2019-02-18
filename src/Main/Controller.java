@@ -1,7 +1,7 @@
 package Main;
 
 import GeneticAlgorithm.GeneticAlgorithm;
-import Utils.Utils;
+import Utils.ImageUtils;
 import javafx.animation.AnimationTimer;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -12,7 +12,9 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 
+import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,8 +48,17 @@ public class Controller {
 
     @FXML
     private void initialize() {
-        ga = new GeneticAlgorithm();
         initializeGUI();
+        gc = canvas.getGraphicsContext2D();
+        ImageUtils imageUtils = new ImageUtils();
+
+        try {
+            List<Color> pixelList = imageUtils.readAndParseImage(fileName);
+            ga = new GeneticAlgorithm(pixelList);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         final long startNanoTime = System.nanoTime(); // Time when system starts
         initialized = true;
 
@@ -85,7 +96,7 @@ public class Controller {
 
     private void initializeImageSelector() {
         ClassLoader classLoader = getClass().getClassLoader();
-        File folder = new File(classLoader.getResource("images").getFile());
+        File folder = new File(Objects.requireNonNull(classLoader.getResource("images")).getFile());
         File[] imageFiles = folder.listFiles();
         Arrays.sort(Objects.requireNonNull(imageFiles));
 

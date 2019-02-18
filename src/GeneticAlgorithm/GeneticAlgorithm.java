@@ -2,6 +2,9 @@ package GeneticAlgorithm;
 
 import javafx.scene.canvas.GraphicsContext;
 
+import java.awt.*;
+import java.util.List;
+
 public class GeneticAlgorithm {
 
     // Parameters
@@ -14,7 +17,7 @@ public class GeneticAlgorithm {
 
     private int generation = 0;
 
-    public GeneticAlgorithm() {
+    public GeneticAlgorithm(List<Color> pixelList) {
         population = new Population(populationSize,
                 crossOverRate,
                 mutationRate,
