@@ -1,6 +1,7 @@
 package Utils;
 
 import java.awt.*;
+import java.util.Random;
 
 public class Utils {
 
@@ -9,4 +10,14 @@ public class Utils {
                 + Math.pow(color2.getGreen() - color1.getGreen(), 2)
                 + Math.pow(color2.getBlue() - color1.getBlue(), 2));
     }
+
+    /**
+     * @param limit
+     * @return A random int [0, limit>
+     */
+    public static int randomIndex(int limit) {
+        Random random = new Random();
+        return limit == 0 ? 0 : random.nextInt(limit);
+    }
+
 }

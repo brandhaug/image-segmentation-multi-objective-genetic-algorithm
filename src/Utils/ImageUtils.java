@@ -1,5 +1,7 @@
 package Utils;
 
+import Main.GuiController;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -14,18 +16,20 @@ public class ImageUtils {
     public ImageUtils() {
     }
 
-    public List<Color> readAndParseImage(String fileName) throws IOException {
+    public Color[][] readAndParseImage(String fileName) throws IOException {
         BufferedImage image = readImage(fileName);
-        List<Color> pixelList = parseImage(image);
-        return pixelList;
+        return parseImageTo2DArray(image);
     }
 
     private BufferedImage readImage(String fileName) throws IOException {
         ClassLoader classLoader = getClass().getClassLoader();
-        return ImageIO.read(new File(Objects.requireNonNull(classLoader.getResource("resources/images/" + fileName)).getFile()));
+        BufferedImage image = ImageIO.read(new File(Objects.requireNonNull(classLoader.getResource("resources/images/" + fileName)).getFile()));
+        GuiController.IMAGE_WIDTH = image.getWidth();
+        GuiController.IMAGE_HEIGHT = image.getHeight();
+        return image;
     }
 
-    private List<Color> parseImage(BufferedImage image) {
+    private List<Color> parseImageToList(BufferedImage image) {
         List<Color> pixelList = new ArrayList<>();
 
         for (int y = 0; y < image.getHeight(); y++) {
@@ -35,5 +39,17 @@ public class ImageUtils {
         }
 
         return pixelList;
+    }
+
+    private Color[][] parseImageTo2DArray(BufferedImage image) {
+        Color[][] imageArr = new Color[image.getHeight()][image.getWidth()];
+
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                imageArr[y][x] = new Color(image.getRGB(x, y));
+            }
+        }
+
+        return imageArr;
     }
 }

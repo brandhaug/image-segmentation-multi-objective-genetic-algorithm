@@ -9,7 +9,7 @@
 
 <AnchorPane fx:id="anchorPane" prefHeight="500.0" prefWidth="650.0" styleClass="anchorpane"
             xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="Main.Controller">
+            fx:controller="Main.GuiController">
     <children>
         <Canvas fx:id="canvas" height="500.0" width="500.0"/>
         <VBox alignment="CENTER" layoutX="500.0" prefHeight="500.0" prefWidth="150.0" styleClass="vbox">

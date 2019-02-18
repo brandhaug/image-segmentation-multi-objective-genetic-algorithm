@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class Controller {
+public class GuiController {
 
     // GUI
     @FXML private AnchorPane anchorPane;
@@ -36,6 +36,10 @@ public class Controller {
     public final static int CANVAS_WIDTH = 500; // Canvas width set in View.fxml
     public final static int CANVAS_HEIGHT = 500; // Canvas width set in View.fxml
     public final static int CANVAS_MARGIN = 10; // The margin avoids that extreme points are drawn outside canvas
+
+    public static int IMAGE_WIDTH;
+    public static int IMAGE_HEIGHT;
+
     private GraphicsContext gc; // Used to draw on canvas
 
 
@@ -53,8 +57,8 @@ public class Controller {
         ImageUtils imageUtils = new ImageUtils();
 
         try {
-            List<Color> pixelList = imageUtils.readAndParseImage(fileName);
-            ga = new GeneticAlgorithm(pixelList);
+            Color[][] imageArr = imageUtils.readAndParseImage(fileName);
+            ga = new GeneticAlgorithm(imageArr);
         } catch (IOException e) {
             e.printStackTrace();
         }
