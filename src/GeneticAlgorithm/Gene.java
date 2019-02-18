@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class Gene {
     private Color color; // RGB value
-    private List<Gene> neighbors; // List of neighboring genes (based on Moore neighborhood) {E, W, N, S, NE, SE, NW, SW}
+    private List<NeighborGene> neighbors; // List of neighboring genes (based on Moore neighborhood) {E, W, N, S, NE, SE, NW, SW}
     private Gene pointsTo; // Can point to neighbor or self
 
 }
