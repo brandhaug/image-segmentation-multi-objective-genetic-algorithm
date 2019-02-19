@@ -24,18 +24,19 @@ public class GeneticAlgorithm {
     private int generation = 0;
 
     public GeneticAlgorithm(Color[][] imageArr) {
-        pixelArr = generateGenes(imageArr);
-        population = new Population(pixels,
-                initialChromosome,
-                populationSize,
-                crossOverRate,
-                mutationRate,
-                tournamentSize);
+        pixelArr = generateGenes(imageArr); // TODO: Maybe not allowed to generate genes before pressing start? If so, move to tick where generation == 0
     }
 
     public void tick() {
         if (generation == 0) {
+
             findAndAddAllPixelNeighbors(pixelArr);
+            population = new Population(pixels,
+                    initialChromosome,
+                    populationSize,
+                    crossOverRate,
+                    mutationRate,
+                    tournamentSize);
         }
 
         population.tick();
@@ -54,6 +55,7 @@ public class GeneticAlgorithm {
     }
 
     private Pixel[][] generateGenes(Color[][] imageArr) {
+        System.out.println("Generating genes");
         Pixel[][] pixelArr = new Pixel[GuiController.IMAGE_HEIGHT][GuiController.IMAGE_WIDTH];
 
         for (int y = 0; y < GuiController.IMAGE_HEIGHT; y++) {
@@ -68,6 +70,7 @@ public class GeneticAlgorithm {
     }
 
     private void findAndAddAllPixelNeighbors(Pixel[][] pixelArr) {
+        System.out.println("Finding and adding all PixelNeighbors");
         for (int y = 0; y < GuiController.IMAGE_HEIGHT; y++) {
             for (int x = 0; x < GuiController.IMAGE_WIDTH; x++) {
                 Pixel pixel = pixelArr[y][x];

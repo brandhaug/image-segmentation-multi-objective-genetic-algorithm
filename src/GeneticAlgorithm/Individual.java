@@ -4,11 +4,12 @@ package GeneticAlgorithm;
 import Utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 class Individual {
     private List<Integer> chromosome; // List of genes (pixels)
-    private List<Segment> segments; // List of segments (set of pixels)
+    private List<Segment> segments = new ArrayList<>(); // List of segments (set of pixels)
     private double fitness;
 
     Individual(List<Pixel> pixels, List<Integer> initialChromosome) {
@@ -18,71 +19,47 @@ class Individual {
 
     /**
      * Minimum Spanning Tree (MST)
+     * TODO: Instead of just checking if pixelsLeft contains neighbor in L36, wait with removing pixel in L38
+     * TODO: and check if this neighbor relation is better than current neighbor relation in list
      */
     private void generateInitialIndividual(List<Pixel> pixels) {
-        List<Integer> visitedPixelIndices = new ArrayList<>();
-        List<Pixel> pixelsCopy = new ArrayList<Pixel>(pixels); // Remove chosen vertices to make randomIndex effective
+        System.out.println("Generating Initial Individual");
+        double colorDistanceThreshold = 5.0;
+        List<PixelNeighbor> possibleNeighbors = new ArrayList<>();
+        List<Pixel> pixelsLeft = new ArrayList<>(pixels); // Remove chosen vertices to make randomIndex effective
 
-        while (pixelsCopy.size() != 0) { // Breaks when
-            // Random initial vertex
-            int randomIndex = Utils.randomIndex(pixelsCopy.size());
-            Pixel randomPixel = pixelsCopy.get(randomIndex);
-            visitedPixelIndices.add(randomPixel.getId());
+        while (pixelsLeft.size() != 0) {
+            int randomIndex = Utils.randomIndex(pixelsLeft.size());
+            Pixel randomPixel = pixelsLeft.get(randomIndex); // Random first best pixel
+            pixelsLeft.remove(randomPixel);
 
-            double minDistance = Double.MAX_VALUE;
-            List<Integer> bestPixelIndices = new ArrayList<>();
-            List<Integer> bestNeighborIndices = new ArrayList<>(); // Select neighbor stochastic
-
-
-            for (int visitedPixelIndex : visitedPixelIndices) { // Finding best neighbors in visited pixels
-                Pixel visitedPixel = pixels.get(visitedPixelIndex);
-                for (PixelNeighbor neighbor : visitedPixel.getNeighbors()) { // TODO: Null pointer here
-                    if (!visitedPixelIndices.contains(neighbor.getPixel().getId())) { // Check if already visited
-                        if (chromosome.get(visitedPixelIndex) == pixels.get(visitedPixelIndex).getId()) { // Check if points to self
-
-                            // Neighbor is valid: Not visited and points to self (default value)
-
-                            if (neighbor.getColorDistance() < minDistance) { // Better neighbor: clear and add
-                                bestPixelIndices.clear();
-                                bestNeighborIndices.clear();
-                                bestPixelIndices.add(visitedPixelIndex);
-                                bestNeighborIndices.add(neighbor.getPixel().getId());
-                            } else if (neighbor.getColorDistance() == minDistance) { // Equal good neighbor: add
-                                bestPixelIndices.add(visitedPixelIndex);
-                                bestNeighborIndices.add(neighbor.getPixel().getId());
-                            }
-                        }
-                    }
+            for (PixelNeighbor neighbor : randomPixel.getNeighbors()) {
+                if (pixelsLeft.contains(neighbor.getNeighbor())) {
+                    possibleNeighbors.add(neighbor);
+                    pixelsLeft.remove(neighbor.getNeighbor());
                 }
             }
 
-            if (bestNeighborIndices.size() != bestPixelIndices.size()) {
-                throw new Error("BestNeighborIndices size is not equal to BestGeneIndices size");
-            }
+//            Segment segment = new Segment();
+//            segment.addPixel(randomPixel);
 
-            if (bestNeighborIndices.isEmpty()) {
-                System.out.println("Best Neighbors is empty");
-                break;
-            } else {
-                randomIndex = Utils.randomIndex(bestNeighborIndices.size()); // Random best neighbor index
-                int bestGeneId = bestPixelIndices.get(randomIndex);
-                int bestNeighborIndex = bestNeighborIndices.get(randomIndex);
-                pixelsCopy.remove(pixels.get(bestGeneId));
+            while (possibleNeighbors.size() != 0) {
+                possibleNeighbors.sort(Comparator.comparingDouble(PixelNeighbor::getColorDistance)); // Sort by colorDistance
+                PixelNeighbor bestPixelNeighbor = possibleNeighbors.get(0);
+                Pixel bestPixel = bestPixelNeighbor.getPixel();
+                Pixel bestNeighbor = bestPixelNeighbor.getNeighbor(); // Best neighbor of best pixel
+                possibleNeighbors.remove(bestPixelNeighbor);
 
-                chromosome.set(bestGeneId, bestNeighborIndex);
-                visitedPixelIndices.add(bestNeighborIndex);
-            }
+                chromosome.set(bestPixel.getId(), bestNeighbor.getId());// Update chromosome: ID == Index
+//                segment.addPixel(bestPixel);
 
-            if (pixelsCopy.size() % 100 == 0) {
-                System.out.println("End of while loop - PixelsCopy size: " + pixelsCopy.size());
-            }
+                for (PixelNeighbor neighbor : bestNeighbor.getNeighbors()) { // Make Neighbors of bestNeighbor available for selection
+                    if (neighbor.getColorDistance() < colorDistanceThreshold && pixelsLeft.contains(neighbor.getNeighbor())) {
+                        possibleNeighbors.add(neighbor);
+                        pixelsLeft.remove(neighbor.getNeighbor());
+                    }
+                }
+            } // Possible neighbors empty (one segmentation finished)
         }
-
-        // TODO: Change to Map so you can always get with id to avoid index-based extra lists
-        // TODO: Can i sort by distance? The order is specified in project task info
-        // TODO: Add to segment
-        // TODO: Do we need a threshold? ex. If colorDistance > threshold: point pixel to self
-
-        System.out.println("Finished");
     }
 }

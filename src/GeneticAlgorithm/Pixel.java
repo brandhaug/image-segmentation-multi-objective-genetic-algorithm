@@ -4,6 +4,7 @@ package GeneticAlgorithm;
 import Utils.Utils;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,19 +14,11 @@ class Pixel {
     private int id;
     private static int identification = 0;
     private Color color; // RGB value
-    private List<PixelNeighbor> neighbors; // List of neighboring genes (based on Moore neighborhood) {E, W, N, S, NE, SE, NW, SW}
-    private Pixel pointsTo; // Can point to neighbor or self
-
+    private List<PixelNeighbor> neighbors = new ArrayList<>(); // List of neighboring genes (based on Moore neighborhood) {E, W, N, S, NE, SE, NW, SW}
 
     Pixel(Color color) {
         this.id = identification++;
         this.color = color;
-    }
-
-    Pixel(Color color, List<PixelNeighbor> neighbors, Pixel pointsTo) {
-        this.color = color;
-        this.neighbors = neighbors;
-        this.pointsTo = pointsTo;
     }
 
     int getId() {
@@ -42,8 +35,7 @@ class Pixel {
 
     void addPixelNeighbor(Pixel neighbor) {
         double colorDistance = Utils.getEuclideanColorDistance(color, neighbor.getColor());
-        System.out.println(colorDistance);
-        PixelNeighbor pixelNeighbor = new PixelNeighbor(neighbor, colorDistance);
+        PixelNeighbor pixelNeighbor = new PixelNeighbor(this, neighbor, colorDistance);
         neighbors.add(pixelNeighbor);
     }
 }
