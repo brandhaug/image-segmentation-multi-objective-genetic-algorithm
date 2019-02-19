@@ -21,7 +21,7 @@ public class ImageUtils {
         return parseImageTo2DArray(image);
     }
 
-    private BufferedImage readImage(String fileName) throws IOException {
+    public BufferedImage readImage(String fileName) throws IOException {
         ClassLoader classLoader = getClass().getClassLoader();
         BufferedImage image = ImageIO.read(new File(Objects.requireNonNull(classLoader.getResource("resources/images/" + fileName)).getFile()));
         GuiController.IMAGE_WIDTH = image.getWidth();
@@ -41,7 +41,7 @@ public class ImageUtils {
         return pixelList;
     }
 
-    private Color[][] parseImageTo2DArray(BufferedImage image) {
+    public Color[][] parseImageTo2DArray(BufferedImage image) {
         Color[][] imageArr = new Color[image.getHeight()][image.getWidth()];
 
         for (int y = 0; y < image.getHeight(); y++) {

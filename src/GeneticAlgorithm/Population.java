@@ -33,4 +33,8 @@ public class Population {
     void tick() {
 
     }
+
+    public List<Segment> getAlphaSegments() {
+        return individuals.get(0).getSegments();
+    }
 }

@@ -24,7 +24,8 @@ class Individual {
      */
     private void generateInitialIndividual(List<Pixel> pixels) {
         System.out.println("Generating Initial Individual");
-        double colorDistanceThreshold = 5.0;
+        final long startTime = System.currentTimeMillis();
+        double colorDistanceThreshold = 20.0;
         List<PixelNeighbor> possibleNeighbors = new ArrayList<>();
         List<Pixel> pixelsLeft = new ArrayList<>(pixels); // Remove chosen vertices to make randomIndex effective
 
@@ -34,14 +35,14 @@ class Individual {
             pixelsLeft.remove(randomPixel);
 
             for (PixelNeighbor neighbor : randomPixel.getNeighbors()) {
-                if (pixelsLeft.contains(neighbor.getNeighbor())) {
+                if (neighbor.getColorDistance() < colorDistanceThreshold && pixelsLeft.contains(neighbor.getNeighbor())) {
                     possibleNeighbors.add(neighbor);
                     pixelsLeft.remove(neighbor.getNeighbor());
                 }
             }
 
-//            Segment segment = new Segment();
-//            segment.addPixel(randomPixel);
+            Segment segment = new Segment();
+            segment.addPixel(randomPixel);
 
             while (possibleNeighbors.size() != 0) {
                 possibleNeighbors.sort(Comparator.comparingDouble(PixelNeighbor::getColorDistance)); // Sort by colorDistance
@@ -50,8 +51,9 @@ class Individual {
                 Pixel bestNeighbor = bestPixelNeighbor.getNeighbor(); // Best neighbor of best pixel
                 possibleNeighbors.remove(bestPixelNeighbor);
 
-                chromosome.set(bestPixel.getId(), bestNeighbor.getId());// Update chromosome: ID == Index
-//                segment.addPixel(bestPixel);
+//                chromosome.set(bestPixel.getId(), bestNeighbor.getId());// Update chromosome: ID == Index
+                chromosome.set(bestNeighbor.getId(), bestPixel.getId());// Update chromosome: ID == Index
+                segment.addPixel(bestPixel);
 
                 for (PixelNeighbor neighbor : bestNeighbor.getNeighbors()) { // Make Neighbors of bestNeighbor available for selection
                     if (neighbor.getColorDistance() < colorDistanceThreshold && pixelsLeft.contains(neighbor.getNeighbor())) {
@@ -60,6 +62,13 @@ class Individual {
                     }
                 }
             } // Possible neighbors empty (one segmentation finished)
+
+            segments.add(segment);
         }
+        System.out.println(segments.size() + " segments created in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds");
+    }
+
+    public List<Segment> getSegments() {
+        return segments;
     }
 }

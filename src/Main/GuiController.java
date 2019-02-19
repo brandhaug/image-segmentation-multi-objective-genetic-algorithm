@@ -13,6 +13,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,14 +24,22 @@ import java.util.Objects;
 public class GuiController {
 
     // GUI
-    @FXML private AnchorPane anchorPane;
-    @FXML private Canvas canvas;
-    @FXML private Button startButton; // Toggles between "Start" and "Pause", depending on state
-    @FXML private Button resetButton;
-    @FXML private Button saveButton;
-    @FXML private Label timeLabel; // Shows current time
-    @FXML private Label generationLabel; // Shows generation in GeneticAlgorithm
-    @FXML private ComboBox imageSelector; // Shows benchmark fitness for current map
+    @FXML
+    private AnchorPane anchorPane;
+    @FXML
+    private Canvas canvas;
+    @FXML
+    private Button startButton; // Toggles between "Start" and "Pause", depending on state
+    @FXML
+    private Button resetButton;
+    @FXML
+    private Button saveButton;
+    @FXML
+    private Label timeLabel; // Shows current time
+    @FXML
+    private Label generationLabel; // Shows generation in GeneticAlgorithm
+    @FXML
+    private ComboBox imageSelector; // Shows benchmark fitness for current map
 
     // Canvas
     public final static int CANVAS_WIDTH = 500; // Canvas width set in View.fxml
@@ -41,6 +50,8 @@ public class GuiController {
     public static int IMAGE_HEIGHT;
 
     private GraphicsContext gc; // Used to draw on canvas
+
+    private BufferedImage image;
 
 
     // States
@@ -57,7 +68,9 @@ public class GuiController {
         ImageUtils imageUtils = new ImageUtils();
 
         try {
-            Color[][] imageArr = imageUtils.readAndParseImage(fileName);
+            image = imageUtils.readImage(fileName);
+            Color[][] imageArr = imageUtils.parseImageTo2DArray(image);
+            renderImage();
             ga = new GeneticAlgorithm(imageArr);
         } catch (IOException e) {
             e.printStackTrace();
@@ -70,6 +83,7 @@ public class GuiController {
             public void handle(long currentNanoTime) {
                 if (!paused) {
                     tick(startNanoTime, currentNanoTime);
+                    render();
                 }
             }
         }.start();
@@ -83,7 +97,12 @@ public class GuiController {
 
     private void render() {
         gc.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); // Clear canvas
+        renderImage();
         ga.render(gc); // Renders alphaSolution of Population in GeneticAlgorithm
+    }
+
+    private void renderImage() {
+//        gc.drawImage(SwingFXUtils.toFXImage(image, null), 0, 0);
     }
 
     private void initializeGUI() {

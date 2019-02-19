@@ -10,7 +10,7 @@ import java.util.List;
 public class GeneticAlgorithm {
 
     // Parameters
-    private final int populationSize = 20; // 20-100 dependent on problem
+    private final int populationSize = 1; // 20-100 dependent on problem
     private final double crossOverRate = 0.7; // 80%-95%
     private final double mutationRate = 0.01; // 0.5%-1%.
     private final int tournamentSize = 3; // Number of members in tournament selection
@@ -29,7 +29,6 @@ public class GeneticAlgorithm {
 
     public void tick() {
         if (generation == 0) {
-
             findAndAddAllPixelNeighbors(pixelArr);
             population = new Population(pixels,
                     initialChromosome,
@@ -51,7 +50,29 @@ public class GeneticAlgorithm {
     }
 
     public void render(GraphicsContext gc) {
+        for (int y = 0; y < GuiController.IMAGE_HEIGHT; y++) {
+            for (int x = 0; x < GuiController.IMAGE_WIDTH; x++) {
+                gc.setFill(javafx.scene.paint.Color.rgb(pixelArr[y][x].getColor().getRed(), pixelArr[y][x].getColor().getGreen(), pixelArr[y][x].getColor().getBlue()));
+                gc.fillRect(x, y, 1, 1);
+            }
+        }
 
+
+        List<Segment> segments = population.getAlphaSegments();
+        javafx.scene.paint.Color[] colors = {javafx.scene.paint.Color.RED, javafx.scene.paint.Color.ORANGE, javafx.scene.paint.Color.GOLD, javafx.scene.paint.Color.GREENYELLOW, javafx.scene.paint.Color.GREEN, javafx.scene.paint.Color.AQUA, javafx.scene.paint.Color.BLUE, javafx.scene.paint.Color.INDIGO, javafx.scene.paint.Color.VIOLET}; // Possible depot colors
+        int colorIndex = 0;
+        for (Segment segment : segments) {
+            gc.setFill(colors[colorIndex]);
+            for (Pixel pixel : segment.getPixels()) {
+                gc.fillRect(pixel.getX(), pixel.getY(), 1, 1);
+            }
+
+            if (colorIndex == colors.length - 1) {
+                colorIndex = 0;
+            } else {
+                colorIndex++;
+            }
+        }
     }
 
     private Pixel[][] generateGenes(Color[][] imageArr) {
@@ -60,7 +81,7 @@ public class GeneticAlgorithm {
 
         for (int y = 0; y < GuiController.IMAGE_HEIGHT; y++) {
             for (int x = 0; x < GuiController.IMAGE_WIDTH; x++) {
-                Pixel pixel = new Pixel(imageArr[y][x]);
+                Pixel pixel = new Pixel(x, y, imageArr[y][x]);
                 pixelArr[y][x] = pixel;
                 pixels.add(pixel);
                 initialChromosome.add(pixel.getId());

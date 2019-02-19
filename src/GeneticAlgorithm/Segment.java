@@ -16,4 +16,8 @@ public class Segment {
     void addPixel(Pixel pixel) {
         pixels.add(pixel);
     }
+
+    public List<Pixel> getPixels() {
+        return pixels;
+    }
 }
