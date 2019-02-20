@@ -1,6 +1,7 @@
 package GeneticAlgorithm;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class Population {
@@ -31,7 +32,15 @@ public class Population {
     }
 
     void tick() {
+        for (Individual individual: individuals) {
+            /**
+             * NSGA-II
+             */
 
+            individual.calculateObjectiveFunctions();
+        }
+
+        individuals.sort(Comparator.comparingDouble(Individual::getFitness));
     }
 
     public List<Segment> getAlphaSegments() {

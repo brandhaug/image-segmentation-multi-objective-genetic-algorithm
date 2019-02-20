@@ -10,6 +10,8 @@ import java.util.List;
 class Individual {
     private List<Integer> chromosome; // List of genes (pixels)
     private List<Segment> segments = new ArrayList<>(); // List of segments (set of pixels)
+    private double overallDeviation; // Objective function 1
+    private double connectivity; // Objective function 2
     private double fitness;
 
     Individual(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold) {
@@ -70,7 +72,30 @@ class Individual {
         System.out.println(segments.size() + " segments created in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds");
     }
 
-    public List<Segment> getSegments() {
+    List<Segment> getSegments() {
         return segments;
+    }
+
+    void calculateObjectiveFunctions() {
+        overallDeviation = 0.0;
+        connectivity = 0.0;
+
+        for (Segment segment : segments) {
+            segment.calculateObjectiveFunctions();
+            overallDeviation += segment.getOverallDeviation();
+            connectivity +=  segment.getConnectivity();
+        }
+    }
+
+    double getOverallDeviation() {
+        return overallDeviation;
+    }
+
+    double getConnectivity() {
+        return connectivity;
+    }
+
+    public double getFitness() {
+        return fitness;
     }
 }
