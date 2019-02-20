@@ -32,7 +32,7 @@ class Individual {
             Pixel randomPixel = pixelsLeft.get(randomIndex); // Random first best pixel
             pixelsLeft.remove(randomPixel);
 
-            for (PixelNeighbor neighbor : randomPixel.getNeighbors()) {
+            for (PixelNeighbor neighbor : randomPixel.getNeighbors()) { // TODO: replace contains with boolean variable on pixel
                 if (neighbor.getColorDistance() < initialColorDistanceThreshold && pixelsLeft.contains(neighbor.getNeighbor())) {
                     possibleNeighbors.add(neighbor);
                     pixelsLeft.remove(neighbor.getNeighbor());
@@ -41,9 +41,11 @@ class Individual {
 
             Segment segment = new Segment();
             segment.addPixel(randomPixel);
+            randomPixel.setSegment(segment);
+
 
             while (possibleNeighbors.size() != 0) {
-                possibleNeighbors.sort(Comparator.comparingDouble(PixelNeighbor::getColorDistance)); // Sort by colorDistance
+                possibleNeighbors.sort(Comparator.comparingDouble(PixelNeighbor::getColorDistance)); // Sort by colorDistance // TODO: Can this be done any other way? Maybe add in sorted orderIndi
 
                 PixelNeighbor bestPixelNeighbor = possibleNeighbors.get(0);
                 Pixel bestPixel = bestPixelNeighbor.getPixel();
@@ -53,9 +55,10 @@ class Individual {
 //                chromosome.set(bestPixel.getId(), bestNeighbor.getId());// Update chromosome: ID == Index
                 chromosome.set(bestNeighbor.getId(), bestPixel.getId());// Update chromosome: ID == Index
                 segment.addPixel(bestNeighbor);
+                bestNeighbor.setSegment(segment);
 
                 for (PixelNeighbor neighbor : bestNeighbor.getNeighbors()) { // Make Neighbors of bestNeighbor available for selection
-                    if (neighbor.getColorDistance() < initialColorDistanceThreshold && pixelsLeft.contains(neighbor.getNeighbor())) {
+                    if (neighbor.getColorDistance() < initialColorDistanceThreshold && pixelsLeft.contains(neighbor.getNeighbor())) { // TODO: replace contains with boolean variable on pixel
                         possibleNeighbors.add(neighbor);
                         pixelsLeft.remove(neighbor.getNeighbor());
                     }

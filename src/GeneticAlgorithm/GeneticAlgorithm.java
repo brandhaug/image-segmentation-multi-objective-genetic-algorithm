@@ -18,7 +18,7 @@ public class GeneticAlgorithm {
 
     private Population population;
     private List<Pixel> pixels = new ArrayList<>();
-    private List<Integer> initialChromosome = new ArrayList<>(); // All pixels pointing to self
+    private List<Integer> initialChromosome = new ArrayList<>(); // All pixels pointing to self as default
 
     private Pixel[][] pixelArr;
 
@@ -60,6 +60,7 @@ public class GeneticAlgorithm {
 //        }
 
 
+        // javafx.scene.paint.Color is set in front of each color because of overlapping Color class from java.awt used in Pixel
         List<Segment> segments = population.getAlphaSegments();
         javafx.scene.paint.Color[] colors = {javafx.scene.paint.Color.RED, javafx.scene.paint.Color.ORANGE, javafx.scene.paint.Color.GOLD, javafx.scene.paint.Color.GREENYELLOW, javafx.scene.paint.Color.GREEN, javafx.scene.paint.Color.AQUA, javafx.scene.paint.Color.BLUE, javafx.scene.paint.Color.INDIGO, javafx.scene.paint.Color.VIOLET}; // Possible depot colors
         int colorIndex = 0;
