@@ -12,20 +12,18 @@ class Individual {
     private List<Segment> segments = new ArrayList<>(); // List of segments (set of pixels)
     private double fitness;
 
-    Individual(List<Pixel> pixels, List<Integer> initialChromosome) {
+    Individual(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold) {
         this.chromosome = new ArrayList<>(initialChromosome);
-        generateInitialIndividual(pixels);
+        generateInitialIndividual(pixels, initialColorDistanceThreshold);
     }
 
     /**
      * Minimum Spanning Tree (MST)
-     * TODO: Instead of just checking if pixelsLeft contains neighbor in L36, wait with removing pixel in L38
-     * TODO: and check if this neighbor relation is better than current neighbor relation in list
+     * TODO: Optional Instead of just checking if pixelsLeft contains neighbor in L36, wait with removing pixel in L3 and check if this neighbor relation is better than current neighbor relation in list
      */
-    private void generateInitialIndividual(List<Pixel> pixels) {
+    private void generateInitialIndividual(List<Pixel> pixels, double initialColorDistanceThreshold) {
         System.out.println("Generating Initial Individual");
         final long startTime = System.currentTimeMillis();
-        double colorDistanceThreshold = 20.0;
         List<PixelNeighbor> possibleNeighbors = new ArrayList<>();
         List<Pixel> pixelsLeft = new ArrayList<>(pixels); // Remove chosen vertices to make randomIndex effective
 
@@ -35,7 +33,7 @@ class Individual {
             pixelsLeft.remove(randomPixel);
 
             for (PixelNeighbor neighbor : randomPixel.getNeighbors()) {
-                if (neighbor.getColorDistance() < colorDistanceThreshold && pixelsLeft.contains(neighbor.getNeighbor())) {
+                if (neighbor.getColorDistance() < initialColorDistanceThreshold && pixelsLeft.contains(neighbor.getNeighbor())) {
                     possibleNeighbors.add(neighbor);
                     pixelsLeft.remove(neighbor.getNeighbor());
                 }
@@ -46,17 +44,18 @@ class Individual {
 
             while (possibleNeighbors.size() != 0) {
                 possibleNeighbors.sort(Comparator.comparingDouble(PixelNeighbor::getColorDistance)); // Sort by colorDistance
+
                 PixelNeighbor bestPixelNeighbor = possibleNeighbors.get(0);
                 Pixel bestPixel = bestPixelNeighbor.getPixel();
                 Pixel bestNeighbor = bestPixelNeighbor.getNeighbor(); // Best neighbor of best pixel
-                possibleNeighbors.remove(bestPixelNeighbor);
 
+                possibleNeighbors.remove(bestPixelNeighbor);
 //                chromosome.set(bestPixel.getId(), bestNeighbor.getId());// Update chromosome: ID == Index
                 chromosome.set(bestNeighbor.getId(), bestPixel.getId());// Update chromosome: ID == Index
-                segment.addPixel(bestPixel);
+                segment.addPixel(bestNeighbor);
 
                 for (PixelNeighbor neighbor : bestNeighbor.getNeighbors()) { // Make Neighbors of bestNeighbor available for selection
-                    if (neighbor.getColorDistance() < colorDistanceThreshold && pixelsLeft.contains(neighbor.getNeighbor())) {
+                    if (neighbor.getColorDistance() < initialColorDistanceThreshold && pixelsLeft.contains(neighbor.getNeighbor())) {
                         possibleNeighbors.add(neighbor);
                         pixelsLeft.remove(neighbor.getNeighbor());
                     }

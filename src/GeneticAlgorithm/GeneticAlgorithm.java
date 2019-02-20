@@ -14,6 +14,7 @@ public class GeneticAlgorithm {
     private final double crossOverRate = 0.7; // 80%-95%
     private final double mutationRate = 0.01; // 0.5%-1%.
     private final int tournamentSize = 3; // Number of members in tournament selection
+    private final double initialColorDistanceThreshold = 15.0; // Color Distance Threshold for initial population
 
     private Population population;
     private List<Pixel> pixels = new ArrayList<>();
@@ -32,6 +33,7 @@ public class GeneticAlgorithm {
             findAndAddAllPixelNeighbors(pixelArr);
             population = new Population(pixels,
                     initialChromosome,
+                    initialColorDistanceThreshold,
                     populationSize,
                     crossOverRate,
                     mutationRate,
@@ -50,12 +52,12 @@ public class GeneticAlgorithm {
     }
 
     public void render(GraphicsContext gc) {
-        for (int y = 0; y < GuiController.IMAGE_HEIGHT; y++) {
-            for (int x = 0; x < GuiController.IMAGE_WIDTH; x++) {
-                gc.setFill(javafx.scene.paint.Color.rgb(pixelArr[y][x].getColor().getRed(), pixelArr[y][x].getColor().getGreen(), pixelArr[y][x].getColor().getBlue()));
-                gc.fillRect(x, y, 1, 1);
-            }
-        }
+//        for (int y = 0; y < GuiController.IMAGE_HEIGHT; y++) {
+//            for (int x = 0; x < GuiController.IMAGE_WIDTH; x++) {
+//                gc.setFill(javafx.scene.paint.Color.rgb(pixelArr[y][x].getColor().getRed(), pixelArr[y][x].getColor().getGreen(), pixelArr[y][x].getColor().getBlue()));
+//                gc.fillRect(x, y, 1, 1);
+//            }
+//        }
 
 
         List<Segment> segments = population.getAlphaSegments();
