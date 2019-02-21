@@ -2,14 +2,14 @@ package GeneticAlgorithm;
 
 import Utils.Utils;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Represents a set of pixels
  */
-public class Segment {
+class Segment {
     private List<Pixel> pixels = new ArrayList<>();
     private Color centroidColor;
     private double overallDeviation;
@@ -23,7 +23,7 @@ public class Segment {
         pixels.add(pixel);
     }
 
-    public List<Pixel> getPixels() {
+    List<Pixel> getPixels() {
         return pixels;
     }
 
@@ -34,7 +34,8 @@ public class Segment {
         connectivity = 0.0;
         for (Pixel pixel : pixels) {
             for (int j = 0; j < pixel.getPixelNeighbors().size(); j++) {
-                if (pixels.contains(pixel.getPixelNeighbors().get(j).getNeighbor())) { // TODO: Optimize performance by replacing this .contains() statement
+
+                if (pixel.getPixelNeighbors().get(j).getNeighbor().getSegment() == this) {
                     connectivity += (1 / (double) (j + 1));
                 }
             }

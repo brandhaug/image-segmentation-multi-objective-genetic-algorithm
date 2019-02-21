@@ -3,10 +3,7 @@ package GeneticAlgorithm;
 
 import Utils.Utils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 class Individual {
     private List<Integer> chromosome; // List of genes (pixels)
@@ -22,23 +19,33 @@ class Individual {
 
     /**
      * Minimum Spanning Tree (MST)
-     * TODO: Optional Instead of just checking if pixelsLeft contains neighbor in L36, wait with removing pixel in L3 and check if this neighbor relation is better than current neighbor relation in list
+     * TODO: (Probably not necessary) Instead of just checking if pixelsLeft contains neighbor, wait with removing pixel in and check if this neighbor relation is better than current neighbor relation in list. This could potentially remove stochastic selection.
      */
     private void generateInitialIndividual(List<Pixel> pixels, double initialColorDistanceThreshold) {
         System.out.println("Generating Initial Individual");
         final long startTime = System.currentTimeMillis();
-        List<PixelNeighbor> possibleNeighbors = new ArrayList<>();
-        List<Pixel> pixelsLeft = new ArrayList<>(pixels); // Remove chosen vertices to make randomIndex effective
-        boolean[] addedIds = new boolean[pixels.size()];
+
+        // Possible neighbors is
+        List<PixelNeighbor> possibleNeighbors = new ArrayList<>(); // Support array for all possible visits. Sorted by colorDistance
+        List<Pixel> pixelsLeft = new ArrayList<>(pixels); // Support array for removing added pixels to make randomIndex effective
+
+
+        boolean[] addedIds = new boolean[pixels.size()]; // Support array for seeing which pixels is already added. It removes the need for using the ineffective list.contains()
         Arrays.fill(addedIds, false);
 
         while (pixelsLeft.size() != 0) {
+            Segment segment = new Segment();
+
             int randomIndex = Utils.randomIndex(pixelsLeft.size());
             Pixel randomPixel = pixelsLeft.get(randomIndex); // Random first best pixel
+
+            // Update lists
+            segment.addPixel(randomPixel);
+            randomPixel.setSegment(segment);
             pixelsLeft.remove(randomPixel);
             addedIds[randomIndex] = true;
 
-            for (PixelNeighbor neighbor : randomPixel.getPixelNeighbors()) {
+            for (PixelNeighbor neighbor : randomPixel.getPixelNeighbors()) { // Make Neighbors of randomPixel available for selection
                 if (neighbor.getColorDistance() < initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {
                     possibleNeighbors.add(neighbor);
                     pixelsLeft.remove(neighbor.getNeighbor());
@@ -46,21 +53,16 @@ class Individual {
                 }
             }
 
-            Segment segment = new Segment();
-            segment.addPixel(randomPixel);
-            randomPixel.setSegment(segment);
-
-
             while (possibleNeighbors.size() != 0) {
+                // Sort and get best neighbor
                 possibleNeighbors.sort(Comparator.comparingDouble(PixelNeighbor::getColorDistance)); // Sort by colorDistance // TODO: Is sorted add more effective?
-
                 PixelNeighbor bestPixelNeighbor = possibleNeighbors.get(0);
                 Pixel bestPixel = bestPixelNeighbor.getPixel();
                 Pixel bestNeighbor = bestPixelNeighbor.getNeighbor(); // Best neighbor of best pixel
 
+                // Update lists
                 possibleNeighbors.remove(bestPixelNeighbor);
-//                chromosome.set(bestPixel.getId(), bestNeighbor.getId());// Update chromosome: ID == Index
-                chromosome.set(bestNeighbor.getId(), bestPixel.getId());// Update chromosome: ID == Index
+                chromosome.set(bestNeighbor.getId(), bestPixel.getId()); // Update chromosome: ID == Index
                 segment.addPixel(bestNeighbor);
                 bestNeighbor.setSegment(segment);
 
@@ -89,7 +91,7 @@ class Individual {
         for (Segment segment : segments) {
             segment.calculateObjectiveFunctions();
             overallDeviation += segment.getOverallDeviation();
-            connectivity +=  segment.getConnectivity();
+            connectivity += segment.getConnectivity();
         }
     }
 

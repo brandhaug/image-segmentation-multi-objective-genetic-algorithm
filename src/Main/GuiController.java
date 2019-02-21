@@ -4,6 +4,7 @@ import GeneticAlgorithm.GeneticAlgorithm;
 import Utils.ImageUtils;
 import javafx.animation.AnimationTimer;
 import javafx.collections.FXCollections;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -11,8 +12,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.image.Image;
 
-import java.awt.*;
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -46,12 +48,12 @@ public class GuiController {
     public final static int CANVAS_HEIGHT = 500; // Canvas width set in View.fxml
     public final static int CANVAS_MARGIN = 10; // The margin avoids that extreme points are drawn outside canvas
 
-    public static int IMAGE_WIDTH;
-    public static int IMAGE_HEIGHT;
+    public static int imageWidth;
+    public static int imageHeight;
 
     private GraphicsContext gc; // Used to draw on canvas
 
-    private BufferedImage image;
+    private BufferedImage bufferedImage;
 
 
     // States
@@ -63,15 +65,19 @@ public class GuiController {
 
     @FXML
     private void initialize() {
+        System.out.println("Initializing GUI");
         initializeGUI();
         gc = canvas.getGraphicsContext2D();
         ImageUtils imageUtils = new ImageUtils();
 
         try {
-            image = imageUtils.readImage(fileName);
-            Color[][] imageArr = imageUtils.parseImageTo2DArray(image);
+            System.out.println("Reading and drawing image");
+            bufferedImage = imageUtils.readImage(fileName);
+            imageWidth = bufferedImage.getWidth();
+            imageHeight = bufferedImage.getHeight();
+            Color[][] colorArr = imageUtils.parseBufferedImageTo2DArray(bufferedImage);
             renderImage();
-            ga = new GeneticAlgorithm(imageArr);
+            ga = new GeneticAlgorithm(colorArr);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -87,7 +93,6 @@ public class GuiController {
                 }
             }
         }.start();
-
     }
 
     private void tick(long startNanoTime, long currentNanoTime) {
@@ -97,12 +102,12 @@ public class GuiController {
 
     private void render() {
         gc.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); // Clear canvas
-        renderImage();
         ga.render(gc); // Renders alphaSolution of Population in GeneticAlgorithm
     }
 
     private void renderImage() {
-//        gc.drawImage(SwingFXUtils.toFXImage(image, null), 0, 0);
+        Image image = SwingFXUtils.toFXImage(this.bufferedImage, null);
+        gc.drawImage(image, 0, 0);
     }
 
     private void initializeGUI() {
@@ -172,7 +177,6 @@ public class GuiController {
     public void reset() {
         paused = true;
         ga = null;
-
         initialize();
     }
 

@@ -3,7 +3,7 @@ package GeneticAlgorithm;
 
 import Utils.Utils;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,10 +11,10 @@ import java.util.List;
  * Represents one pixel
  */
 class Pixel {
+    private static int identification = 0;
     private int id;
     private int x;
     private int y;
-    private static int identification = 0;
     private Color color; // RGB value
     private List<PixelNeighbor> pixelNeighbors = new ArrayList<>(); // List of neighboring genes (based on Moore neighborhood) {E, W, N, S, NE, SE, NW, SW}
     private Segment segment;
@@ -58,5 +58,9 @@ class Pixel {
 
     public Segment getSegment() {
         return segment;
+    }
+
+    static void resetIdentification() {
+        identification = 0;
     }
 }
