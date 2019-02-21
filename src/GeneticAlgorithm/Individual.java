@@ -4,6 +4,7 @@ package GeneticAlgorithm;
 import Utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -28,16 +29,20 @@ class Individual {
         final long startTime = System.currentTimeMillis();
         List<PixelNeighbor> possibleNeighbors = new ArrayList<>();
         List<Pixel> pixelsLeft = new ArrayList<>(pixels); // Remove chosen vertices to make randomIndex effective
+        boolean[] addedIds = new boolean[pixels.size()];
+        Arrays.fill(addedIds, false);
 
         while (pixelsLeft.size() != 0) {
             int randomIndex = Utils.randomIndex(pixelsLeft.size());
             Pixel randomPixel = pixelsLeft.get(randomIndex); // Random first best pixel
             pixelsLeft.remove(randomPixel);
+            addedIds[randomIndex] = true;
 
-            for (PixelNeighbor neighbor : randomPixel.getNeighbors()) { // TODO: replace contains with boolean variable on pixel
-                if (neighbor.getColorDistance() < initialColorDistanceThreshold && pixelsLeft.contains(neighbor.getNeighbor())) {
+            for (PixelNeighbor neighbor : randomPixel.getNeighbors()) {
+                if (neighbor.getColorDistance() < initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {
                     possibleNeighbors.add(neighbor);
                     pixelsLeft.remove(neighbor.getNeighbor());
+                    addedIds[neighbor.getNeighbor().getId()] = true;
                 }
             }
 
@@ -47,7 +52,7 @@ class Individual {
 
 
             while (possibleNeighbors.size() != 0) {
-                possibleNeighbors.sort(Comparator.comparingDouble(PixelNeighbor::getColorDistance)); // Sort by colorDistance // TODO: Can this be done any other way? Maybe add in sorted orderIndi
+                possibleNeighbors.sort(Comparator.comparingDouble(PixelNeighbor::getColorDistance)); // Sort by colorDistance // TODO: Is sorted add more effective?
 
                 PixelNeighbor bestPixelNeighbor = possibleNeighbors.get(0);
                 Pixel bestPixel = bestPixelNeighbor.getPixel();
@@ -60,9 +65,10 @@ class Individual {
                 bestNeighbor.setSegment(segment);
 
                 for (PixelNeighbor neighbor : bestNeighbor.getNeighbors()) { // Make Neighbors of bestNeighbor available for selection
-                    if (neighbor.getColorDistance() < initialColorDistanceThreshold && pixelsLeft.contains(neighbor.getNeighbor())) { // TODO: replace contains with boolean variable on pixel
+                    if (neighbor.getColorDistance() < initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {
                         possibleNeighbors.add(neighbor);
                         pixelsLeft.remove(neighbor.getNeighbor());
+                        addedIds[neighbor.getNeighbor().getId()] = true;
                     }
                 }
             } // Possible neighbors empty (one segmentation finished)
