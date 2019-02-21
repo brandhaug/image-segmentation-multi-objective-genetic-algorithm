@@ -16,7 +16,7 @@ class Pixel {
     private int y;
     private static int identification = 0;
     private Color color; // RGB value
-    private List<PixelNeighbor> neighbors = new ArrayList<>(); // List of neighboring genes (based on Moore neighborhood) {E, W, N, S, NE, SE, NW, SW}
+    private List<PixelNeighbor> pixelNeighbors = new ArrayList<>(); // List of neighboring genes (based on Moore neighborhood) {E, W, N, S, NE, SE, NW, SW}
     private Segment segment;
 
     Pixel(int x, int y, Color color) {
@@ -34,14 +34,14 @@ class Pixel {
         return color;
     }
 
-    List<PixelNeighbor> getNeighbors() {
-        return neighbors;
+    List<PixelNeighbor> getPixelNeighbors() {
+        return pixelNeighbors;
     }
 
     void addPixelNeighbor(Pixel neighbor) {
         double colorDistance = Utils.getEuclideanColorDistance(color, neighbor.getColor());
         PixelNeighbor pixelNeighbor = new PixelNeighbor(this, neighbor, colorDistance);
-        neighbors.add(pixelNeighbor);
+        pixelNeighbors.add(pixelNeighbor);
     }
 
     int getX() {

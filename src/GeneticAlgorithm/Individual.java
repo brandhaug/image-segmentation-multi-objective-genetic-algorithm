@@ -38,7 +38,7 @@ class Individual {
             pixelsLeft.remove(randomPixel);
             addedIds[randomIndex] = true;
 
-            for (PixelNeighbor neighbor : randomPixel.getNeighbors()) {
+            for (PixelNeighbor neighbor : randomPixel.getPixelNeighbors()) {
                 if (neighbor.getColorDistance() < initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {
                     possibleNeighbors.add(neighbor);
                     pixelsLeft.remove(neighbor.getNeighbor());
@@ -64,7 +64,7 @@ class Individual {
                 segment.addPixel(bestNeighbor);
                 bestNeighbor.setSegment(segment);
 
-                for (PixelNeighbor neighbor : bestNeighbor.getNeighbors()) { // Make Neighbors of bestNeighbor available for selection
+                for (PixelNeighbor neighbor : bestNeighbor.getPixelNeighbors()) { // Make Neighbors of bestNeighbor available for selection
                     if (neighbor.getColorDistance() < initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {
                         possibleNeighbors.add(neighbor);
                         pixelsLeft.remove(neighbor.getNeighbor());

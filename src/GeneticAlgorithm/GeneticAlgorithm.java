@@ -10,7 +10,7 @@ import java.util.List;
 public class GeneticAlgorithm {
 
     // Parameters
-    private final int populationSize = 1; // 20-100 dependent on problem
+    private final int populationSize = 5; // 20-100 dependent on problem
     private final double crossOverRate = 0.7; // 80%-95%
     private final double mutationRate = 0.01; // 0.5%-1%.
     private final int tournamentSize = 3; // Number of members in tournament selection

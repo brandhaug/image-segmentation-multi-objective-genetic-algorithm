@@ -32,18 +32,14 @@ public class Segment {
         calculateCentroidOfPixels();
 
         connectivity = 0.0;
-
         for (Pixel pixel : pixels) {
-            double tempConnectivity = 0.0;
-            int L = pixel.getNeighbors().size();
-            for (int x = 0; x < L; x++) {
-                if (x == L - 1) {
-                    tempConnectivity += (L * (1 / (double) x));  // L * x
+            for (int j = 0; j < pixel.getPixelNeighbors().size(); j++) {
+                if (pixels.contains(pixel.getPixelNeighbors().get(j).getNeighbor())) { // TODO: Optimize performance by replacing this .contains() statement
+                    connectivity += (1 / (double) (j + 1));
                 }
             }
 
-            connectivity += pixels.size() * tempConnectivity; // pixels.size() = N
-            overallDeviation += Utils.getEuclideanColorDistance(pixel.getColor(), centroidColor);
+            overallDeviation += Utils.getEuclideanColorDistance(pixel.getColor(), centroidColor); // dist(i, μ)
         }
     }
 
@@ -56,7 +52,8 @@ public class Segment {
     }
 
     /**
-     * Calculates the average color
+     * Calculates the average color in segment
+     * Used in overall deviation (μ)
      */
     private void calculateCentroidOfPixels() {
         int centroidRed = 0;
