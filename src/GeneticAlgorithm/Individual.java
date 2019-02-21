@@ -1,10 +1,12 @@
 package GeneticAlgorithm;
 
-
 import Utils.Utils;
 
 import java.util.*;
 
+/**
+ * Represents one chromosome
+ */
 class Individual {
     private List<Integer> chromosome; // List of genes (pixels)
     private List<Segment> segments = new ArrayList<>(); // List of segments (set of pixels)

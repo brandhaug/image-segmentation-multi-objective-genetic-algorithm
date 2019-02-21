@@ -1,6 +1,9 @@
 package GeneticAlgorithm;
 
-public class PixelNeighbor {
+/**
+ * Represents the neighborhood relationship between two pixels
+ */
+class PixelNeighbor {
     private Pixel pixel;
     private Pixel neighbor;
     private double colorDistance; // Euclidean Color Distance
@@ -11,7 +14,7 @@ public class PixelNeighbor {
         this.colorDistance = colorDistance;
     }
 
-    public Pixel getPixel() {
+    Pixel getPixel() {
         return pixel;
     }
 

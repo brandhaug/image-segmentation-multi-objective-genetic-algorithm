@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Represents all individuals
+ */
 public class Population {
     private List<Individual> individuals = new ArrayList<>();
 

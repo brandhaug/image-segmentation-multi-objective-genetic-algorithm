@@ -1,6 +1,5 @@
 package GeneticAlgorithm;
 
-
 import Utils.Utils;
 
 import java.awt.Color;

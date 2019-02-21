@@ -7,6 +7,9 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Controller for Genetic Algorithm
+ */
 public class GeneticAlgorithm {
 
     // Parameters
@@ -53,7 +56,7 @@ public class GeneticAlgorithm {
     }
 
     public void render(GraphicsContext gc) {
-               // javafx.scene.paint.Color is set in front of each color because of overlapping Color class from java.awt used in Pixel
+        // javafx.scene.paint.Color is set in front of each color because of overlapping Color class from java.awt used in Pixel
         List<Segment> segments = population.getAlphaSegments();
         javafx.scene.paint.Color[] colors = {javafx.scene.paint.Color.RED, javafx.scene.paint.Color.ORANGE, javafx.scene.paint.Color.GOLD, javafx.scene.paint.Color.GREENYELLOW, javafx.scene.paint.Color.GREEN, javafx.scene.paint.Color.AQUA, javafx.scene.paint.Color.BLUE, javafx.scene.paint.Color.INDIGO, javafx.scene.paint.Color.VIOLET}; // Possible depot colors
         int colorIndex = 0;
