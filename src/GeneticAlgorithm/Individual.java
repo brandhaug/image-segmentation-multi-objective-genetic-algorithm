@@ -29,6 +29,8 @@ class Individual extends Thread {
     private List<Individual> dominatedIndividuals = new ArrayList<>(); // S: set of solutions which individual dominates
     private int rank;
 
+    private double crowdingDistance;
+
     Individual(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold) {
         this.pixels = pixels;
         this.initialChromosome = initialChromosome;
@@ -154,5 +156,9 @@ class Individual extends Thread {
 
     int getRank() {
         return rank;
+    }
+
+    double getCrowdingDistance() {
+        return crowdingDistance;
     }
 }

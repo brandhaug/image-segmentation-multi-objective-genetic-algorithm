@@ -1,5 +1,7 @@
 package GeneticAlgorithm;
 
+import Utils.Utils;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -52,7 +54,7 @@ public class Population {
     }
 
     /**
-     * Ranking individuals based on how many individuals dominates it
+     * Ranking each individual based on how many other individuals dominates it
      * Based on page 3 in NSGA-II paper by Kalyanmoy Deb, Amrit Pratap, Sameer Agarwal, and T. Meyarivan
      */
     private void fastNonDominatedSort() {
@@ -101,6 +103,45 @@ public class Population {
             front = newFront;
             rank++;
         }
+    }
+
+    private Individual tournament() {
+        List<Individual> tournamentMembers = new ArrayList<>();
+        List<Individual> bestRankedMembers = new ArrayList<>();
+        int minRank = Integer.MAX_VALUE;
+
+        for (int i = 0; i < tournamentSize; i++) {
+            boolean contained = true;
+            Individual competitor = null;
+            while (contained) {
+                int randomIndex = Utils.randomIndex(individuals.size());
+                competitor = individuals.get(randomIndex);
+                contained = tournamentMembers.contains(competitor);
+            }
+
+            if (competitor.getRank() < minRank) {
+                bestRankedMembers.clear();
+                bestRankedMembers.add(competitor);
+            } else if (competitor.getRank() == minRank) {
+                bestRankedMembers.add(competitor);
+            }
+        }
+
+        if (bestRankedMembers.size() == 1) {
+            return bestRankedMembers.get(0);
+        }
+
+        double minCrowdingDistance = Double.MAX_VALUE;
+        Individual bestCompetitor = null;
+
+        for (Individual competitor: bestRankedMembers) {
+            if (competitor.getCrowdingDistance() > minCrowdingDistance) {
+                bestCompetitor = competitor;
+                minCrowdingDistance = competitor.getCrowdingDistance();
+            }
+        }
+
+        return bestCompetitor;
     }
 
     List<Segment> getAlphaSegments() {
