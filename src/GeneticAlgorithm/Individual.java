@@ -8,14 +8,26 @@ import java.util.*;
  * Represents one chromosome
  */
 class Individual extends Thread {
+    // Lists
     private List<Integer> chromosome; // List of genes (pixels)
     private List<Segment> segments = new ArrayList<>(); // List of segments (set of pixels)
+
+    // Objective functions
     private double overallDeviation; // Objective function 1
     private double connectivity; // Objective function 2
     private double fitness;
-    private List<Pixel> pixels;
-    private List<Integer> initialChromosome;
+
+    // Initial lists (read only)
+    private final List<Pixel> pixels;
+    private final List<Integer> initialChromosome;
+
+    // Initial parameters
     private double initialColorDistanceThreshold;
+
+    // Non-dominated sorting
+    private int dominatedCount = 0; // n: number of solutions which dominates individual
+    private List<Individual> dominatedIndividuals = new ArrayList<>(); // S: set of solutions which individual dominates
+    private int rank;
 
     Individual(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold) {
         this.pixels = pixels;
@@ -27,6 +39,7 @@ class Individual extends Thread {
     public void run() {
         this.chromosome = new ArrayList<>(initialChromosome);
         generateInitialIndividual(pixels, initialColorDistanceThreshold);
+        calculateObjectiveFunctions();
     }
 
     /**
@@ -115,7 +128,31 @@ class Individual extends Thread {
         return connectivity;
     }
 
-    public double getFitness() {
+    double getFitness() {
         return fitness;
+    }
+
+    int getDominatedCount() {
+        return dominatedCount;
+    }
+
+    List<Individual> getDominatedIndividuals() {
+        return dominatedIndividuals;
+    }
+
+    void addToDominatedIndividuals(Individual individual) {
+        dominatedIndividuals.add(individual);
+    }
+
+    void setDominatedCount(int dominatedCount) {
+        this.dominatedCount = dominatedCount;
+    }
+
+    void setRank(int rank) {
+        this.rank = rank;
+    }
+
+    int getRank() {
+        return rank;
     }
 }

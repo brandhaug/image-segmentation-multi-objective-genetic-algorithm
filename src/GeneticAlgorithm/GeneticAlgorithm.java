@@ -20,8 +20,10 @@ public class GeneticAlgorithm {
     private final double initialColorDistanceThreshold = 15.0; // Color Distance Threshold for initial population
 
     private Population population;
-    private List<Pixel> pixels = new ArrayList<>();
-    private List<Integer> initialChromosome = new ArrayList<>(); // All pixels pointing to self as default
+
+    // Initial lists (read only)
+    private final List<Pixel> pixels = new ArrayList<>();
+    private final List<Integer> initialChromosome = new ArrayList<>(); // All pixels pointing to self as default
 
     private Pixel[][] pixelArr;
 
