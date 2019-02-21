@@ -17,7 +17,7 @@ public class Population {
     private int tournamentSize;
 
 
-    Population(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold, int populationSize, double crossOverRate, double mutationRate, int tournamentSize) {
+    Population(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold, int populationSize, double crossOverRate, double mutationRate, int tournamentSize) throws InterruptedException {
         this.populationSize = populationSize;
         this.crossOverRate = crossOverRate;
         this.mutationRate = mutationRate;
@@ -26,16 +26,21 @@ public class Population {
         generateInitialPopulation(pixels, initialChromosome, initialColorDistanceThreshold);
     }
 
-    private void generateInitialPopulation(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold) {
+    private void generateInitialPopulation(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold) throws InterruptedException {
         System.out.println("Generating Initial Population");
         for (int i = 0; i < populationSize; i++) {
             Individual individual = new Individual(pixels, initialChromosome, initialColorDistanceThreshold);
+            individual.start(); // Start thread by calling run method
             individuals.add(individual);
+        }
+
+        for (Individual individual : individuals) {
+            individual.join(); // Wait for thread to terminate
         }
     }
 
     void tick() {
-        for (Individual individual: individuals) {
+        for (Individual individual : individuals) {
             /**
              * NSGA-II
              */

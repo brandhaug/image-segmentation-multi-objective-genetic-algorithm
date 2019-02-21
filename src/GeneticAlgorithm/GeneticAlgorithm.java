@@ -13,7 +13,7 @@ import java.util.List;
 public class GeneticAlgorithm {
 
     // Parameters
-    private final int populationSize = 5; // 20-100 dependent on problem
+    private final int populationSize = 10; // 20-100 dependent on problem
     private final double crossOverRate = 0.7; // 80%-95%
     private final double mutationRate = 0.01; // 0.5%-1%.
     private final int tournamentSize = 3; // Number of members in tournament selection
@@ -35,13 +35,17 @@ public class GeneticAlgorithm {
     public void tick() {
         if (generation == 0) {
             findAndAddAllPixelNeighbors(pixelArr);
-            population = new Population(pixels,
-                    initialChromosome,
-                    initialColorDistanceThreshold,
-                    populationSize,
-                    crossOverRate,
-                    mutationRate,
-                    tournamentSize);
+            try {
+                population = new Population(pixels,
+                        initialChromosome,
+                        initialColorDistanceThreshold,
+                        populationSize,
+                        crossOverRate,
+                        mutationRate,
+                        tournamentSize);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         population.tick();

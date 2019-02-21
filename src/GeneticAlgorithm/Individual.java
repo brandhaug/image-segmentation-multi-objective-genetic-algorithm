@@ -7,14 +7,24 @@ import java.util.*;
 /**
  * Represents one chromosome
  */
-class Individual {
+class Individual extends Thread {
     private List<Integer> chromosome; // List of genes (pixels)
     private List<Segment> segments = new ArrayList<>(); // List of segments (set of pixels)
     private double overallDeviation; // Objective function 1
     private double connectivity; // Objective function 2
     private double fitness;
+    private List<Pixel> pixels;
+    private List<Integer> initialChromosome;
+    private double initialColorDistanceThreshold;
 
     Individual(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold) {
+        this.pixels = pixels;
+        this.initialChromosome = initialChromosome;
+        this.initialColorDistanceThreshold = initialColorDistanceThreshold;
+    }
+
+    @Override
+    public void run() {
         this.chromosome = new ArrayList<>(initialChromosome);
         generateInitialIndividual(pixels, initialColorDistanceThreshold);
     }
