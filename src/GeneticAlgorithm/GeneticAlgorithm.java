@@ -18,6 +18,7 @@ public class GeneticAlgorithm {
     private final double mutationRate = 0.01; // 0.5%-1%.
     private final int tournamentSize = 3; // Number of members in tournament selection
     private final double initialColorDistanceThreshold = 15.0; // Color Distance Threshold for initial population
+    private final int splits = 2;
 
     private Population population;
 
@@ -34,20 +35,17 @@ public class GeneticAlgorithm {
         pixelArr = generateGenes(colorArr); // TODO: Maybe not allowed to generate genes before pressing start? If so, move to tick where generation == 0
     }
 
-    public void tick() {
+    public void tick() throws InterruptedException {
         if (generation == 0) {
             findAndAddAllPixelNeighbors(pixelArr);
-            try {
-                population = new Population(pixels,
-                        initialChromosome,
-                        initialColorDistanceThreshold,
-                        populationSize,
-                        crossOverRate,
-                        mutationRate,
-                        tournamentSize);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            population = new Population(pixels,
+                    initialChromosome,
+                    initialColorDistanceThreshold,
+                    populationSize,
+                    crossOverRate,
+                    mutationRate,
+                    tournamentSize,
+                    splits);
         }
 
         population.tick();
@@ -62,26 +60,20 @@ public class GeneticAlgorithm {
     }
 
     public void render(GraphicsContext gc) {
-        // javafx.scene.paint.Color is set in front of each color because of overlapping Color class from java.awt used in Pixel
         List<Segment> segments = population.getAlphaSegments();
-        javafx.scene.paint.Color[] colors = {javafx.scene.paint.Color.RED, javafx.scene.paint.Color.ORANGE, javafx.scene.paint.Color.GOLD, javafx.scene.paint.Color.GREENYELLOW, javafx.scene.paint.Color.GREEN, javafx.scene.paint.Color.AQUA, javafx.scene.paint.Color.BLUE, javafx.scene.paint.Color.INDIGO, javafx.scene.paint.Color.VIOLET}; // Possible depot colors
-        int colorIndex = 0;
         for (Segment segment : segments) {
-            gc.setFill(colors[colorIndex]);
-            for (Pixel pixel : segment.getPixels()) {
+            Color awtColor = segment.getCentroidColor();
+            javafx.scene.paint.Color fxColor = javafx.scene.paint.Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
+            gc.setFill(fxColor);
+            for (Pixel pixel : segment.getSegmentPixels()) {
                 gc.fillRect(pixel.getX(), pixel.getY(), 1, 1);
-            }
-
-            if (colorIndex == colors.length - 1) {
-                colorIndex = 0;
-            } else {
-                colorIndex++;
             }
         }
     }
 
     private Pixel[][] generateGenes(Color[][] colorArr) {
         System.out.println("Generating genes");
+        final long startTime = System.currentTimeMillis();
         Pixel[][] pixelArr = new Pixel[GuiController.imageHeight][GuiController.imageWidth];
 
         for (int y = 0; y < GuiController.imageHeight; y++) {
@@ -92,11 +84,15 @@ public class GeneticAlgorithm {
                 initialChromosome.add(pixel.getId());
             }
         }
+
+        System.out.println("Genes generated in " + ((System.currentTimeMillis() - startTime)) + "ms");
         return pixelArr;
     }
 
     private void findAndAddAllPixelNeighbors(Pixel[][] pixelArr) {
         System.out.println("Finding and adding all PixelNeighbors");
+        final long startTime = System.currentTimeMillis();
+
         for (int y = 0; y < GuiController.imageHeight; y++) {
             for (int x = 0; x < GuiController.imageWidth; x++) {
                 Pixel pixel = pixelArr[y][x];
@@ -134,5 +130,7 @@ public class GeneticAlgorithm {
                 }
             }
         }
+
+        System.out.println("Neighbors added in " + ((System.currentTimeMillis() - startTime)) + "ms");
     }
 }

@@ -96,7 +96,11 @@ public class GuiController {
     }
 
     private void tick(long startNanoTime, long currentNanoTime) {
-        ga.tick();
+        try {
+            ga.tick();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         updateGUI(startNanoTime, currentNanoTime);
     }
 

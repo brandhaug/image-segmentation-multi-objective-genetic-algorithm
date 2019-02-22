@@ -7,40 +7,47 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents a set of pixels
+ * Represents a set of Pixels
  */
 class Segment {
-    private List<Pixel> pixels = new ArrayList<>();
+    // Initial lists (read only)
+    private final List<Pixel> pixels;
+
+    private List<Pixel> segmentPixels = new ArrayList<>();
+    private Color averageColor;
     private Color centroidColor;
     private double overallDeviation;
     private double connectivity;
 
-    Segment() {
-
+    Segment(List<Pixel> pixels) {
+        this.pixels = pixels;
     }
 
-    void addPixel(Pixel pixel) {
-        pixels.add(pixel);
+    void addSegmentPixel(Pixel pixel) {
+        segmentPixels.add(pixel);
     }
 
-    List<Pixel> getPixels() {
-        return pixels;
+    List<Pixel> getSegmentPixels() {
+        return segmentPixels;
     }
 
+    /**
+     * Calculates overallDeviation and connectivity
+     */
     void calculateObjectiveFunctions() {
         overallDeviation = 0.0;
-        calculateCentroidOfPixels();
+        calculateCentroidCoordinate();
 
         connectivity = 0.0;
-        for (Pixel pixel : pixels) {
-            for (int j = 0; j < pixel.getPixelNeighbors().size(); j++) {
+        for (Pixel segmentPixel : segmentPixels) {
+            for (int j = 0; j < segmentPixel.getPixelNeighbors().size(); j++) {
 
-                if (pixel.getPixelNeighbors().get(j).getNeighbor().getSegment() == this) {
+                if (segmentPixel.getPixelNeighbors().get(j).getNeighbor().getSegment() != this) {
                     connectivity += (1 / (double) (j + 1));
                 }
             }
 
-            overallDeviation += Utils.getEuclideanColorDistance(pixel.getColor(), centroidColor); // dist(i, μ)
+            overallDeviation += Utils.getEuclideanColorDistance(segmentPixel.getColor(), centroidColor); // dist(i, μ)
         }
     }
 
@@ -53,24 +60,55 @@ class Segment {
     }
 
     /**
-     * Calculates the average color in segment
+     * The Centroid is the average position of all the points of an object.
      * Used in overall deviation (μ)
+     * Also calculates the average color in segment used in drawing on canvas
      */
-    private void calculateCentroidOfPixels() {
-        int centroidRed = 0;
-        int centroidGreen = 0;
-        int centroidBlue = 0;
+    private void calculateCentroidCoordinate() {
+        int averageX = 0;
+        int averageY = 0;
 
-        for (Pixel pixel : pixels) {
-            centroidRed += pixel.getColor().getRed();
-            centroidGreen += pixel.getColor().getGreen();
-            centroidBlue += pixel.getColor().getBlue();
+        int averageRed = 0;
+        int averageGreen = 0;
+        int averageBlue = 0;
+
+        for (Pixel segmentPixel : segmentPixels) {
+            averageX += segmentPixel.getX();
+            averageY += segmentPixel.getY();
+
+            averageRed += segmentPixel.getColor().getRed();
+            averageGreen += segmentPixel.getColor().getGreen();
+            averageBlue += segmentPixel.getColor().getBlue();
         }
 
-        centroidRed = centroidRed / pixels.size();
-        centroidGreen = centroidGreen / pixels.size();
-        centroidBlue = centroidBlue / pixels.size();
+        averageX = averageX / segmentPixels.size();
+        averageY = averageY / segmentPixels.size();
 
-        centroidColor = new Color(centroidRed, centroidGreen, centroidBlue);
+        averageRed = averageRed / segmentPixels.size();
+        averageGreen = averageGreen / segmentPixels.size();
+        averageBlue = averageBlue / segmentPixels.size();
+
+        Pixel centroidPixel = null;
+
+        for (Pixel pixel : pixels) { // TODO: Optimize by calculating ID
+            if (pixel.getX() == averageX && pixel.getY() == averageY) {
+                centroidPixel = pixel;
+            }
+        }
+
+        if (centroidPixel == null) {
+            throw new NullPointerException("CentroidPixel is null");
+        }
+
+        centroidColor = centroidPixel.getColor();
+        averageColor = new Color(averageRed, averageGreen, averageBlue);
+    }
+
+    public Color getCentroidColor() {
+        return centroidColor;
+    }
+
+    public Color getAverageColor() {
+        return averageColor;
     }
 }

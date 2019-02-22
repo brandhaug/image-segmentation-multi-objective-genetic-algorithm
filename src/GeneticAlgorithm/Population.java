@@ -3,33 +3,54 @@ package GeneticAlgorithm;
 import Utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 /**
  * Represents all individuals
  */
-public class Population {
+class Population {
     private List<Individual> individuals = new ArrayList<>();
+
+    // Lists
+    private List<Pixel> pixels;
+    private List<Integer> initialChromosome;
 
     // Parameters
     private int populationSize; // Number of Solutions in population
     private double crossOverRate;
     private double mutationRate;
     private int tournamentSize;
+    private int splits;
+    private double initialColorDistanceThreshold;
+
+    private List<Individual> paretoFront;
 
 
-    Population(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold, int populationSize, double crossOverRate, double mutationRate, int tournamentSize) throws InterruptedException {
+    Population(List<Pixel> pixels,
+               List<Integer> initialChromosome,
+               double initialColorDistanceThreshold,
+               int populationSize,
+               double crossOverRate,
+               double mutationRate,
+               int tournamentSize,
+               int splits) throws InterruptedException {
+        this.pixels = pixels;
+        this.initialChromosome = initialChromosome;
+        this.initialColorDistanceThreshold = initialColorDistanceThreshold;
         this.populationSize = populationSize;
         this.crossOverRate = crossOverRate;
         this.mutationRate = mutationRate;
         this.tournamentSize = tournamentSize;
+        this.splits = splits;
 
         generateInitialPopulation(pixels, initialChromosome, initialColorDistanceThreshold);
     }
 
     private void generateInitialPopulation(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold) throws InterruptedException {
         System.out.println("Generating Initial Population");
+        final long startTime = System.currentTimeMillis();
         for (int i = 0; i < populationSize; i++) {
             Individual individual = new Individual(pixels, initialChromosome, initialColorDistanceThreshold);
             individual.start(); // Start thread by calling run method
@@ -39,17 +60,46 @@ public class Population {
         for (Individual individual : individuals) {
             individual.join(); // Wait for thread to terminate
         }
+        System.out.println(individuals.size() + " individuals created in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
     }
 
     /**
      * NSGA-II
      */
-    void tick() {
+    void tick() throws InterruptedException {
         fastNonDominatedSort();
-        for (Individual individual : individuals) {
-            individual.calculateObjectiveFunctions();
+        calculateCrowdingDistances();
+
+//        int numberOfParentsToKeep = (populationSize - (int) (populationSize * crossOverRate));
+//        List<Individual> newIndividuals = new ArrayList<>(individuals.subList(0, numberOfParentsToKeep));
+
+        List<Individual> newIndividuals = paretoFront;
+
+        System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
+
+        while (newIndividuals.size() != populationSize) {
+            // Selection
+            Individual parent = tournament();
+            Individual otherParent = tournament();
+
+            // Crossover
+            List<List<Integer>> newChromosomes = crossOver(parent, otherParent, splits);
+
+            // Mutation
+            for (List<Integer> newChromosome : newChromosomes) {
+                if (newIndividuals.size() != populationSize) {
+                    double random = Utils.randomDouble();
+                    if (random < mutationRate) {
+                        swapMutate(newChromosome);
+                    }
+
+                    // Add offspring
+                    newIndividuals.add(new Individual(pixels, newChromosome));
+                }
+            }
         }
 
+        individuals = newIndividuals;
 //        individuals.sort(Comparator.comparingDouble(Individual::getRank));
     }
 
@@ -58,7 +108,11 @@ public class Population {
      * Based on page 3 in NSGA-II paper by Kalyanmoy Deb, Amrit Pratap, Sameer Agarwal, and T. Meyarivan
      */
     private void fastNonDominatedSort() {
+        System.out.println("Non-dominated sorting");
+        final long startTime = System.currentTimeMillis();
         List<Individual> front = new ArrayList<>(); // F
+
+        int rank = 1;
 
         for (Individual individual : individuals) { // p in P
             for (Individual individualToCompare : individuals) { // q in P
@@ -81,12 +135,14 @@ public class Population {
             }
 
             if (individual.getDominatedCount() == 0) {
-                individual.setRank(1);
+                individual.setRank(rank);
                 front.add(individual);
             }
         }
 
-        int rank = 2;
+        paretoFront = new ArrayList<>(front);
+
+        rank++;
         while (front.size() != 0) {
             List<Individual> newFront = new ArrayList<>(); // Q
             for (Individual individual : front) { // p in F
@@ -103,45 +159,134 @@ public class Population {
             front = newFront;
             rank++;
         }
+
+        System.out.println("Non dominated sorting finished after " + ((System.currentTimeMillis() - startTime)) + "ms");
+    }
+
+    private void calculateCrowdingDistances() {
+        System.out.println("Calculating crowding distances");
+        final long startTime = System.currentTimeMillis();
+
+        // Reset distances
+        for (Individual individual : paretoFront) {
+            individual.setCrowdingDistance(0);
+        }
+
+        // Objective function 1: Overall deviation
+        individuals.sort(Comparator.comparingDouble(Individual::getOverallDeviation));
+        double minOverallDeviation = individuals.get(individuals.size() - 1).getOverallDeviation();
+        double maxOverallDeviation = individuals.get(0).getOverallDeviation();
+        individuals.get(0).setCrowdingDistance(Double.POSITIVE_INFINITY);
+        for (int k = 1; k < paretoFront.size() - 1; k++) {
+            individuals.get(k).setCrowdingDistance(individuals.get(k).getCrowdingDistance() + (individuals.get(k + 1).getOverallDeviation() - individuals.get(k - 1).getOverallDeviation()) / (maxOverallDeviation - minOverallDeviation));
+        }
+
+        // Objective function 2: Connectivity
+        individuals.sort(Comparator.comparingDouble(Individual::getConnectivity));
+        double minConnectivity = individuals.get(individuals.size() - 1).getConnectivity();
+        double maxConnectivity = individuals.get(0).getConnectivity();
+        individuals.get(0).setCrowdingDistance(Double.POSITIVE_INFINITY);
+        for (int k = 1; k < paretoFront.size() - 1; k++) {
+            individuals.get(k).setCrowdingDistance(individuals.get(k).getCrowdingDistance() + (individuals.get(k + 1).getConnectivity() - individuals.get(k - 1).getConnectivity()) / (maxConnectivity - minConnectivity));
+        }
+
+        System.out.println("Crowding distances calculated in " + ((System.currentTimeMillis() - startTime)) + "ms");
     }
 
     private Individual tournament() {
-        List<Individual> tournamentMembers = new ArrayList<>();
-        List<Individual> bestRankedMembers = new ArrayList<>();
+        System.out.println("Selecting parent in tournament");
+        final long startTime = System.currentTimeMillis();
+
+        List<Individual> tournamentCompetitors = new ArrayList<>();
+        List<Individual> bestRankedCompetitors = new ArrayList<>();
         int minRank = Integer.MAX_VALUE;
 
         for (int i = 0; i < tournamentSize; i++) {
             boolean contained = true;
             Individual competitor = null;
+
             while (contained) {
                 int randomIndex = Utils.randomIndex(individuals.size());
                 competitor = individuals.get(randomIndex);
-                contained = tournamentMembers.contains(competitor);
+                contained = tournamentCompetitors.contains(competitor);
             }
 
+            tournamentCompetitors.add(competitor);
+
             if (competitor.getRank() < minRank) {
-                bestRankedMembers.clear();
-                bestRankedMembers.add(competitor);
+                bestRankedCompetitors.clear();
+                bestRankedCompetitors.add(competitor);
             } else if (competitor.getRank() == minRank) {
-                bestRankedMembers.add(competitor);
+                bestRankedCompetitors.add(competitor);
             }
         }
 
-        if (bestRankedMembers.size() == 1) {
-            return bestRankedMembers.get(0);
+        if (bestRankedCompetitors.size() == 1) {
+            return bestRankedCompetitors.get(0);
         }
 
         double minCrowdingDistance = Double.MAX_VALUE;
         Individual bestCompetitor = null;
 
-        for (Individual competitor: bestRankedMembers) {
-            if (competitor.getCrowdingDistance() > minCrowdingDistance) {
+        for (Individual competitor : bestRankedCompetitors) {
+            if (competitor.getCrowdingDistance() < minCrowdingDistance) {
                 bestCompetitor = competitor;
                 minCrowdingDistance = competitor.getCrowdingDistance();
             }
         }
 
+        System.out.println("Parent selected in tournament in " + ((System.currentTimeMillis() - startTime)) + "ms");
+
         return bestCompetitor;
+    }
+
+    private List<List<Integer>> crossOver(Individual parent, Individual otherParent, int splits) {
+        System.out.println("Performing crossOver");
+        final long startTime = System.currentTimeMillis();
+
+        if (parent.getChromosome().size() != otherParent.getChromosome().size()) {
+            throw new Error("Chromosomes are different size");
+        }
+
+        List<List<Integer>> newChromosomes = new ArrayList<>();
+        int[] partitionIndices = Utils.generatePartitionIndices(parent.getChromosome().size(), splits);
+        List<List<Integer>> partsFromParent = Utils.splitRoute(parent.getChromosome(), partitionIndices, splits);
+        List<List<Integer>> partsFromOtherParent = Utils.splitRoute(otherParent.getChromosome(), partitionIndices, splits);
+
+        List<Integer> newChromosome = new ArrayList<>();
+        List<Integer> newChromosome2 = new ArrayList<>();
+
+        if (partsFromParent.size() != splits) {
+            throw new Error("Legg til +1");
+        }
+
+        for (int i = 0; i < splits; i++) {
+            if (i % 2 == 0) {
+                newChromosome.addAll(partsFromParent.get(i));
+                newChromosome2.addAll(partsFromOtherParent.get(i));
+            } else {
+                newChromosome.addAll(partsFromOtherParent.get(i));
+                newChromosome2.addAll(partsFromParent.get(i));
+            }
+        }
+
+        if (newChromosome.size() != parent.getChromosome().size()) {
+            throw new Error("Chromosomes are different size");
+        }
+
+        System.out.println("Crossover executed in " + ((System.currentTimeMillis() - startTime)) + "ms");
+
+        newChromosomes.add(newChromosome);
+        newChromosomes.add(newChromosome2);
+
+        return newChromosomes;
+    }
+
+    private void swapMutate(List<Integer> chromosome) {
+        int indexA = Utils.randomIndex(chromosome.size());
+        int randomNeighborIndex = Utils.randomIndex(pixels.get(indexA).getPixelNeighbors().size());
+        int indexB = pixels.get(indexA).getPixelNeighbors().get(randomNeighborIndex).getPixel().getId();
+        Collections.swap(chromosome, indexA, indexB);
     }
 
     List<Segment> getAlphaSegments() {

@@ -19,7 +19,6 @@ class Individual extends Thread {
 
     // Initial lists (read only)
     private final List<Pixel> pixels;
-    private final List<Integer> initialChromosome;
 
     // Initial parameters
     private double initialColorDistanceThreshold;
@@ -31,16 +30,33 @@ class Individual extends Thread {
 
     private double crowdingDistance;
 
+    private boolean initialize;
+
     Individual(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold) {
         this.pixels = pixels;
-        this.initialChromosome = initialChromosome;
+        this.chromosome = new ArrayList<>(initialChromosome);
         this.initialColorDistanceThreshold = initialColorDistanceThreshold;
+        this.initialize = true;
     }
+
+    Individual(List<Pixel> pixels, List<Integer> chromosome) {
+        this.pixels = pixels;
+        this.chromosome = chromosome;
+        this.initialize = false;
+    }
+
+//    Individual(List<Integer> chromosome) {
+//        this.chromosome = chromosome;
+//    }
 
     @Override
     public void run() {
-        this.chromosome = new ArrayList<>(initialChromosome);
-        generateInitialIndividual(pixels, initialColorDistanceThreshold);
+        if (initialize) {
+            generateInitialIndividual(pixels, initialColorDistanceThreshold);
+        } else {
+            calculateSegments();
+        }
+
         calculateObjectiveFunctions();
     }
 
@@ -49,10 +65,6 @@ class Individual extends Thread {
      * TODO: (Probably not necessary) Instead of just checking if pixelsLeft contains neighbor, wait with removing pixel in and check if this neighbor relation is better than current neighbor relation in list. This could potentially remove stochastic selection.
      */
     private void generateInitialIndividual(List<Pixel> pixels, double initialColorDistanceThreshold) {
-        System.out.println("Generating Initial Individual");
-        final long startTime = System.currentTimeMillis();
-
-        // Possible neighbors is
         List<PixelNeighbor> possibleNeighbors = new ArrayList<>(); // Support array for all possible visits. Sorted by colorDistance
         List<Pixel> pixelsLeft = new ArrayList<>(pixels); // Support array for removing added pixels to make randomIndex effective
 
@@ -61,13 +73,13 @@ class Individual extends Thread {
         Arrays.fill(addedIds, false);
 
         while (pixelsLeft.size() != 0) {
-            Segment segment = new Segment();
+            Segment segment = new Segment(pixels);
 
             int randomIndex = Utils.randomIndex(pixelsLeft.size());
             Pixel randomPixel = pixelsLeft.get(randomIndex); // Random first best pixel
 
             // Update lists
-            segment.addPixel(randomPixel);
+            segment.addSegmentPixel(randomPixel);
             randomPixel.setSegment(segment);
             pixelsLeft.remove(randomPixel);
             addedIds[randomIndex] = true;
@@ -90,7 +102,7 @@ class Individual extends Thread {
                 // Update lists
                 possibleNeighbors.remove(bestPixelNeighbor);
                 chromosome.set(bestNeighbor.getId(), bestPixel.getId()); // Update chromosome: ID == Index
-                segment.addPixel(bestNeighbor);
+                segment.addSegmentPixel(bestNeighbor);
                 bestNeighbor.setSegment(segment);
 
                 for (PixelNeighbor neighbor : bestNeighbor.getPixelNeighbors()) { // Make Neighbors of bestNeighbor available for selection
@@ -104,7 +116,59 @@ class Individual extends Thread {
 
             segments.add(segment);
         }
-        System.out.println(segments.size() + " segments created in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds");
+    }
+
+    /**
+     * Creates segments based on chromosome
+     */
+    private void calculateSegments() {
+        System.out.println("Calculating segments");
+        final long startTime = System.currentTimeMillis();
+
+        List<Pixel> pixelsInSegment = new ArrayList<>(); // Support array for all possible visits. Sorted by colorDistance
+        List<Pixel> pixelsLeft = new ArrayList<>(pixels); // Support array for removing added pixels to make randomIndex effective
+
+        while (pixelsLeft.size() != 0) {
+            Segment segment = new Segment(pixels);
+
+            int randomIndex = Utils.randomIndex(pixelsLeft.size());
+            Pixel randomPixel = pixelsLeft.get(randomIndex); // Random first best pixel
+
+            // Update lists
+            segment.addSegmentPixel(randomPixel);
+            randomPixel.setSegment(segment);
+            pixelsLeft.remove(randomPixel);
+
+            for (PixelNeighbor neighbor : randomPixel.getPixelNeighbors()) { // Make Neighbors of randomPixel available for selection
+                if (chromosome.get(neighbor.getNeighbor().getId()) == randomPixel.getId()) {
+                    segment.addSegmentPixel(neighbor.getNeighbor());
+                    pixelsInSegment.add(neighbor.getNeighbor());
+                    pixelsLeft.remove(neighbor.getNeighbor());
+                }
+            }
+
+            while (pixelsInSegment.size() != 0) {
+                for (Pixel pixel : pixelsInSegment) {
+                    for (PixelNeighbor neighbor : randomPixel.getPixelNeighbors()) {
+                        if (chromosome.get(neighbor.getNeighbor().getId()) == pixel.getId()) {
+                            segment.addSegmentPixel(neighbor.getNeighbor());
+                            pixelsInSegment.add(neighbor.getNeighbor());
+                            pixelsLeft.remove(neighbor.getNeighbor());
+                        }
+                    }
+                }
+            } // Segment finished
+
+            for (int i = 0; i < segment.getSegmentPixels().size(); i++) {
+                for (int j = 0; j < segment.getSegmentPixels().size(); j++) {
+                    if (i != j && segment.getSegmentPixels().get(i) == segment.getSegmentPixels().get(j)) {
+                        throw new Error("Duplicates in Segment");
+                    }
+                }
+            }
+        }
+
+        System.out.println(segments.size() + " segments calcuated in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
     }
 
     List<Segment> getSegments() {
@@ -158,7 +222,15 @@ class Individual extends Thread {
         return rank;
     }
 
+    void setCrowdingDistance(double crowdingDistance) {
+        this.crowdingDistance = crowdingDistance;
+    }
+
     double getCrowdingDistance() {
         return crowdingDistance;
+    }
+
+    List<Integer> getChromosome() {
+        return chromosome;
     }
 }
