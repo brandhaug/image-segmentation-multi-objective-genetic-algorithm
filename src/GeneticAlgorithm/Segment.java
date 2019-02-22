@@ -1,5 +1,6 @@
 package GeneticAlgorithm;
 
+import Main.GuiController;
 import Utils.Utils;
 
 import java.awt.Color;
@@ -84,13 +85,10 @@ class Segment {
         averageGreen = averageGreen / segmentPixels.size();
         averageBlue = averageBlue / segmentPixels.size();
 
-        Pixel centroidPixel = null;
 
-        for (Pixel pixel : GeneticAlgorithm.pixels) { // TODO: Optimize by calculating ID
-            if (pixel.getX() == averageX && pixel.getY() == averageY) {
-                centroidPixel = pixel;
-            }
-        }
+        // Calculating index in list based on imageWidth
+        int centroidPixelId = (GuiController.imageWidth * averageY) + averageX;
+        Pixel centroidPixel = GeneticAlgorithm.pixels.get(centroidPixelId);
 
         if (centroidPixel == null) {
             throw new NullPointerException("CentroidPixel is null");

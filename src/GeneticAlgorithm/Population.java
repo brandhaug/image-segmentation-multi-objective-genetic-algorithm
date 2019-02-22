@@ -12,39 +12,17 @@ import java.util.List;
  */
 class Population {
     private List<Individual> individuals = new ArrayList<>();
-
-    // Parameters
-    private int populationSize; // Number of Solutions in population
-    private double crossOverRate;
-    private double mutationRate;
-    private int tournamentSize;
-    private int splits;
-    private double initialColorDistanceThreshold;
-
     private List<Individual> paretoFront;
 
-
-    Population(               double initialColorDistanceThreshold,
-               int populationSize,
-               double crossOverRate,
-               double mutationRate,
-               int tournamentSize,
-               int splits) throws InterruptedException {
-        this.initialColorDistanceThreshold = initialColorDistanceThreshold;
-        this.populationSize = populationSize;
-        this.crossOverRate = crossOverRate;
-        this.mutationRate = mutationRate;
-        this.tournamentSize = tournamentSize;
-        this.splits = splits;
-
-        generateInitialPopulation(initialColorDistanceThreshold);
+    Population() throws InterruptedException {
+        generateInitialPopulation();
     }
 
-    private void generateInitialPopulation(double initialColorDistanceThreshold) throws InterruptedException {
+    private void generateInitialPopulation() throws InterruptedException {
         System.out.println("Generating Initial Population");
         final long startTime = System.currentTimeMillis();
-        for (int i = 0; i < populationSize; i++) {
-            Individual individual = new Individual(initialColorDistanceThreshold);
+        for (int i = 0; i < GeneticAlgorithm.populationSize; i++) {
+            Individual individual = new Individual();
             individual.start(); // Start thread by calling run method
             individuals.add(individual);
         }
@@ -59,6 +37,9 @@ class Population {
      * NSGA-II
      */
     void tick() throws InterruptedException {
+        System.out.println("Starting new generation");
+        final long startTime = System.currentTimeMillis();
+
         fastNonDominatedSort();
         calculateCrowdingDistances();
 
@@ -69,30 +50,42 @@ class Population {
 
         System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
 
-        while (newIndividuals.size() != populationSize) {
-            // Selection
-            Individual parent = tournament();
-            Individual otherParent = tournament();
-
-            // Crossover
-            List<List<Integer>> newChromosomes = crossOver(parent, otherParent, splits);
-
-            // Mutation
-            for (List<Integer> newChromosome : newChromosomes) {
-                if (newIndividuals.size() != populationSize) {
-                    double random = Utils.randomDouble();
-                    if (random < mutationRate) {
-                        swapMutate(newChromosome);
-                    }
-
-                    // Add offspring
-                    newIndividuals.add(new Individual(newChromosome));
-                }
-            }
+        while (newIndividuals.size() != GeneticAlgorithm.populationSize) {
+            int randomIndex = Utils.randomIndex(individuals.size());
+            Individual i = new Individual(individuals.get(randomIndex).getChromosome());
+            i.start();
+            newIndividuals.add(i);
+//            // Selection
+//            Individual parent = tournament();
+//            Individual otherParent = tournament();
+//
+//            // Crossover
+//            List<List<Integer>> newChromosomes = crossOver(parent, otherParent, GeneticAlgorithm.numberOfSplits);
+//
+//            // Mutation
+//            for (List<Integer> newChromosome : newChromosomes) {
+//                if (newIndividuals.size() != GeneticAlgorithm.populationSize) {
+//                    double random = Utils.randomDouble();
+//                    if (random < GeneticAlgorithm.mutationRate) {
+//                        swapMutate(newChromosome);
+//                    }
+//
+//                    // Add offspring
+//                    Individual newIndividual = new Individual(newChromosome);
+//                    newIndividuals.add(newIndividual);
+//                }
+//            }
         }
 
+        for (Individual newIndividual : newIndividuals) {
+            newIndividual.join(); // Wait for thread to terminate
+        }
+//        System.out.println("Segments in offspring calculated in " + ((System.currentTimeMillis() - startTime2) / 1000) + "s");
+
         individuals = newIndividuals;
-//        individuals.sort(Comparator.comparingDouble(Individual::getRank));
+
+        individuals.sort(Comparator.comparingDouble(Individual::getRank));
+        System.out.println("New generation generated in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
     }
 
     /**
@@ -109,18 +102,9 @@ class Population {
         for (Individual individual : individuals) { // p in P
             for (Individual individualToCompare : individuals) { // q in P
                 if (individual != individualToCompare) {
-                    // A(x1, y1) dominates B(x2, y2) when: (x1 <= x2 and y1 <= y2) and (x1 < x2 or y1 < y2)
-                    if ((individual.getOverallDeviation() <= individualToCompare.getOverallDeviation() &&
-                            individual.getConnectivity() <= individualToCompare.getConnectivity()) &&
-                            (individual.getOverallDeviation() < individualToCompare.getOverallDeviation() ||
-                                    individual.getConnectivity() < individualToCompare.getConnectivity())) {
-                        individual.addToDominatedIndividuals(individualToCompare); // Add to the set of solutions dominated (S)
-
-                        // A(x1, y1) is dominated by B(x2, y2) when: (x1 >= x2 and y1 >= y2) and (x1 > x2 or y1 > y2)
-                    } else if ((individual.getOverallDeviation() >= individualToCompare.getOverallDeviation() &&
-                            individual.getConnectivity() >= individualToCompare.getConnectivity()) &&
-                            (individual.getOverallDeviation() > individualToCompare.getOverallDeviation() ||
-                                    individual.getConnectivity() > individualToCompare.getConnectivity())) {
+                    if (individual.dominates(individualToCompare)) { // Add to the set of solutions dominated (S)
+                        individual.addToDominatedIndividuals(individualToCompare);
+                    } else if (individualToCompare.dominates(individual)) {
                         individual.setDominatedCount(individual.getDominatedCount() + 1); // Increment the domination counter (n)
                     }
                 }
@@ -186,14 +170,11 @@ class Population {
     }
 
     private Individual tournament() {
-        System.out.println("Selecting parent in tournament");
-        final long startTime = System.currentTimeMillis();
-
         List<Individual> tournamentCompetitors = new ArrayList<>();
         List<Individual> bestRankedCompetitors = new ArrayList<>();
         int minRank = Integer.MAX_VALUE;
 
-        for (int i = 0; i < tournamentSize; i++) {
+        for (int i = 0; i < GeneticAlgorithm.tournamentSize; i++) {
             boolean contained = true;
             Individual competitor = null;
 
@@ -208,26 +189,33 @@ class Population {
             if (competitor.getRank() < minRank) {
                 bestRankedCompetitors.clear();
                 bestRankedCompetitors.add(competitor);
+                minRank = competitor.getRank();
             } else if (competitor.getRank() == minRank) {
                 bestRankedCompetitors.add(competitor);
             }
+        }
+
+        if (bestRankedCompetitors.size() == 0) {
+            throw new Error("No competitors");
         }
 
         if (bestRankedCompetitors.size() == 1) {
             return bestRankedCompetitors.get(0);
         }
 
-        double minCrowdingDistance = Double.MAX_VALUE;
+        double maxCrowdingDistance = -Double.MAX_VALUE;
         Individual bestCompetitor = null;
 
         for (Individual competitor : bestRankedCompetitors) {
-            if (competitor.getCrowdingDistance() < minCrowdingDistance) {
+            if (competitor.getCrowdingDistance() > maxCrowdingDistance) {
                 bestCompetitor = competitor;
-                minCrowdingDistance = competitor.getCrowdingDistance();
+                maxCrowdingDistance = competitor.getCrowdingDistance();
             }
         }
 
-        System.out.println("Parent selected in tournament in " + ((System.currentTimeMillis() - startTime)) + "ms");
+        if (bestCompetitor == null) {
+            throw new NullPointerException("BestCompetitor is null");
+        }
 
         return bestCompetitor;
     }

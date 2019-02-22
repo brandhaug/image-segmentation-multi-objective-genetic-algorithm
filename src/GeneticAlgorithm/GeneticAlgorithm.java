@@ -13,12 +13,12 @@ import java.util.List;
 public class GeneticAlgorithm {
 
     // Parameters
-    private final int populationSize = 10; // 20-100 dependent on problem
-    private final double crossOverRate = 0.7; // 80%-95%
-    private final double mutationRate = 0.01; // 0.5%-1%.
-    private final int tournamentSize = 3; // Number of members in tournament selection
-    private final double initialColorDistanceThreshold = 15.0; // Color Distance Threshold for initial population
-    private final int splits = 2;
+    final static int populationSize = 20; // 20-100 dependent on problem
+    //    private final double crossOverRate = 0.7; // 80%-95%
+    final static double mutationRate = 0.01; // 0.5%-1%.
+    final static int tournamentSize = 3; // Number of members in tournament selection
+    final static double initialColorDistanceThreshold = 15.0; // Color Distance Threshold for initial population
+    final static int numberOfSplits = 2;
 
     private Population population;
 
@@ -38,15 +38,10 @@ public class GeneticAlgorithm {
     public void tick() throws InterruptedException {
         if (generation == 0) {
             findAndAddAllPixelNeighbors(pixelArr);
-            population = new Population(initialColorDistanceThreshold,
-                    populationSize,
-                    crossOverRate,
-                    mutationRate,
-                    tournamentSize,
-                    splits);
+            population = new Population();
+        } else {
+            population.tick();
         }
-
-        population.tick();
         generation++;
     }
 
@@ -59,12 +54,21 @@ public class GeneticAlgorithm {
 
     public void render(GraphicsContext gc) {
         List<Segment> segments = population.getAlphaSegments();
+        int colorIndex = 0;
         for (Segment segment : segments) {
-            Color awtColor = segment.getCentroidColor();
-            javafx.scene.paint.Color fxColor = javafx.scene.paint.Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
-            gc.setFill(fxColor);
+//            Color awtColor = segment.getAverageColor();
+//            javafx.scene.paint.Color fxColor = javafx.scene.paint.Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
+//            gc.setFill(fxColor);
+            javafx.scene.paint.Color[] colors = {javafx.scene.paint.Color.RED, javafx.scene.paint.Color.ORANGE, javafx.scene.paint.Color.GOLD, javafx.scene.paint.Color.GREENYELLOW, javafx.scene.paint.Color.GREEN, javafx.scene.paint.Color.AQUA, javafx.scene.paint.Color.BLUE, javafx.scene.paint.Color.INDIGO, javafx.scene.paint.Color.VIOLET}; // Possible depot colors
+            gc.setFill(colors[colorIndex]);
             for (Pixel pixel : segment.getSegmentPixels()) {
                 gc.fillRect(pixel.getX(), pixel.getY(), 1, 1);
+            }
+
+            if (colorIndex == colors.length - 1) {
+                colorIndex = 0;
+            } else {
+                colorIndex++;
             }
         }
     }
