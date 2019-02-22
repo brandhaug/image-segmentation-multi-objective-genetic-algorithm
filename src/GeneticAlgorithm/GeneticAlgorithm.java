@@ -23,8 +23,8 @@ public class GeneticAlgorithm {
     private Population population;
 
     // Initial lists (read only)
-    private final List<Pixel> pixels = new ArrayList<>();
-    private final List<Integer> initialChromosome = new ArrayList<>(); // All pixels pointing to self as default
+    final static List<Pixel> pixels = new ArrayList<>();
+    final static List<Integer> initialChromosome = new ArrayList<>(); // All pixels pointing to self as default
 
     private Pixel[][] pixelArr;
 
@@ -38,9 +38,7 @@ public class GeneticAlgorithm {
     public void tick() throws InterruptedException {
         if (generation == 0) {
             findAndAddAllPixelNeighbors(pixelArr);
-            population = new Population(pixels,
-                    initialChromosome,
-                    initialColorDistanceThreshold,
+            population = new Population(initialColorDistanceThreshold,
                     populationSize,
                     crossOverRate,
                     mutationRate,

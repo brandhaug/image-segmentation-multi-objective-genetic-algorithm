@@ -17,9 +17,6 @@ class Individual extends Thread {
     private double connectivity; // Objective function 2
     private double fitness;
 
-    // Initial lists (read only)
-    private final List<Pixel> pixels;
-
     // Initial parameters
     private double initialColorDistanceThreshold;
 
@@ -32,27 +29,21 @@ class Individual extends Thread {
 
     private boolean initialize;
 
-    Individual(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold) {
-        this.pixels = pixels;
-        this.chromosome = new ArrayList<>(initialChromosome);
+    Individual(double initialColorDistanceThreshold) {
+        this.chromosome = new ArrayList<>(GeneticAlgorithm.initialChromosome);
         this.initialColorDistanceThreshold = initialColorDistanceThreshold;
         this.initialize = true;
     }
 
-    Individual(List<Pixel> pixels, List<Integer> chromosome) {
-        this.pixels = pixels;
+    Individual(List<Integer> chromosome) {
         this.chromosome = chromosome;
         this.initialize = false;
     }
 
-//    Individual(List<Integer> chromosome) {
-//        this.chromosome = chromosome;
-//    }
-
     @Override
     public void run() {
         if (initialize) {
-            generateInitialIndividual(pixels, initialColorDistanceThreshold);
+            generateInitialIndividual();
         } else {
             calculateSegments();
         }
@@ -64,16 +55,16 @@ class Individual extends Thread {
      * Minimum Spanning Tree (MST)
      * TODO: (Probably not necessary) Instead of just checking if pixelsLeft contains neighbor, wait with removing pixel in and check if this neighbor relation is better than current neighbor relation in list. This could potentially remove stochastic selection.
      */
-    private void generateInitialIndividual(List<Pixel> pixels, double initialColorDistanceThreshold) {
+    private void generateInitialIndividual() {
         List<PixelNeighbor> possibleNeighbors = new ArrayList<>(); // Support array for all possible visits. Sorted by colorDistance
-        List<Pixel> pixelsLeft = new ArrayList<>(pixels); // Support array for removing added pixels to make randomIndex effective
+        List<Pixel> pixelsLeft = new ArrayList<>(GeneticAlgorithm.pixels); // Support array for removing added pixels to make randomIndex effective
 
 
-        boolean[] addedIds = new boolean[pixels.size()]; // Support array for seeing which pixels is already added. It removes the need for using the ineffective list.contains()
+        boolean[] addedIds = new boolean[GeneticAlgorithm.pixels.size()]; // Support array for seeing which pixels is already added. It removes the need for using the ineffective list.contains()
         Arrays.fill(addedIds, false);
 
         while (pixelsLeft.size() != 0) {
-            Segment segment = new Segment(pixels);
+            Segment segment = new Segment();
 
             int randomIndex = Utils.randomIndex(pixelsLeft.size());
             Pixel randomPixel = pixelsLeft.get(randomIndex); // Random first best pixel
@@ -126,10 +117,10 @@ class Individual extends Thread {
         final long startTime = System.currentTimeMillis();
 
         List<Pixel> pixelsInSegment = new ArrayList<>(); // Support array for all possible visits. Sorted by colorDistance
-        List<Pixel> pixelsLeft = new ArrayList<>(pixels); // Support array for removing added pixels to make randomIndex effective
+        List<Pixel> pixelsLeft = new ArrayList<>(GeneticAlgorithm.pixels); // Support array for removing added pixels to make randomIndex effective
 
         while (pixelsLeft.size() != 0) {
-            Segment segment = new Segment(pixels);
+            Segment segment = new Segment();
 
             int randomIndex = Utils.randomIndex(pixelsLeft.size());
             Pixel randomPixel = pixelsLeft.get(randomIndex); // Random first best pixel

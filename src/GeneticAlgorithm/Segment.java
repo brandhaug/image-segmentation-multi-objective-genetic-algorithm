@@ -10,17 +10,13 @@ import java.util.List;
  * Represents a set of Pixels
  */
 class Segment {
-    // Initial lists (read only)
-    private final List<Pixel> pixels;
-
     private List<Pixel> segmentPixels = new ArrayList<>();
     private Color averageColor;
     private Color centroidColor;
     private double overallDeviation;
     private double connectivity;
 
-    Segment(List<Pixel> pixels) {
-        this.pixels = pixels;
+    Segment() {
     }
 
     void addSegmentPixel(Pixel pixel) {
@@ -90,7 +86,7 @@ class Segment {
 
         Pixel centroidPixel = null;
 
-        for (Pixel pixel : pixels) { // TODO: Optimize by calculating ID
+        for (Pixel pixel : GeneticAlgorithm.pixels) { // TODO: Optimize by calculating ID
             if (pixel.getX() == averageX && pixel.getY() == averageY) {
                 centroidPixel = pixel;
             }

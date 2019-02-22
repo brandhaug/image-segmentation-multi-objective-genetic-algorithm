@@ -13,10 +13,6 @@ import java.util.List;
 class Population {
     private List<Individual> individuals = new ArrayList<>();
 
-    // Lists
-    private List<Pixel> pixels;
-    private List<Integer> initialChromosome;
-
     // Parameters
     private int populationSize; // Number of Solutions in population
     private double crossOverRate;
@@ -28,16 +24,12 @@ class Population {
     private List<Individual> paretoFront;
 
 
-    Population(List<Pixel> pixels,
-               List<Integer> initialChromosome,
-               double initialColorDistanceThreshold,
+    Population(               double initialColorDistanceThreshold,
                int populationSize,
                double crossOverRate,
                double mutationRate,
                int tournamentSize,
                int splits) throws InterruptedException {
-        this.pixels = pixels;
-        this.initialChromosome = initialChromosome;
         this.initialColorDistanceThreshold = initialColorDistanceThreshold;
         this.populationSize = populationSize;
         this.crossOverRate = crossOverRate;
@@ -45,14 +37,14 @@ class Population {
         this.tournamentSize = tournamentSize;
         this.splits = splits;
 
-        generateInitialPopulation(pixels, initialChromosome, initialColorDistanceThreshold);
+        generateInitialPopulation(initialColorDistanceThreshold);
     }
 
-    private void generateInitialPopulation(List<Pixel> pixels, List<Integer> initialChromosome, double initialColorDistanceThreshold) throws InterruptedException {
+    private void generateInitialPopulation(double initialColorDistanceThreshold) throws InterruptedException {
         System.out.println("Generating Initial Population");
         final long startTime = System.currentTimeMillis();
         for (int i = 0; i < populationSize; i++) {
-            Individual individual = new Individual(pixels, initialChromosome, initialColorDistanceThreshold);
+            Individual individual = new Individual(initialColorDistanceThreshold);
             individual.start(); // Start thread by calling run method
             individuals.add(individual);
         }
@@ -94,7 +86,7 @@ class Population {
                     }
 
                     // Add offspring
-                    newIndividuals.add(new Individual(pixels, newChromosome));
+                    newIndividuals.add(new Individual(newChromosome));
                 }
             }
         }
@@ -284,8 +276,8 @@ class Population {
 
     private void swapMutate(List<Integer> chromosome) {
         int indexA = Utils.randomIndex(chromosome.size());
-        int randomNeighborIndex = Utils.randomIndex(pixels.get(indexA).getPixelNeighbors().size());
-        int indexB = pixels.get(indexA).getPixelNeighbors().get(randomNeighborIndex).getPixel().getId();
+        int randomNeighborIndex = Utils.randomIndex(GeneticAlgorithm.pixels.get(indexA).getPixelNeighbors().size());
+        int indexB = GeneticAlgorithm.pixels.get(indexA).getPixelNeighbors().get(randomNeighborIndex).getPixel().getId();
         Collections.swap(chromosome, indexA, indexB);
     }
 
