@@ -73,7 +73,6 @@ class Individual extends Thread {
             for (PixelNeighbor neighbor : randomPixel.getPixelNeighbors()) { // Make Neighbors of randomPixel available for selection
                 if (neighbor.getColorDistance() < GeneticAlgorithm.initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {
                     possibleNeighbors.add(neighbor);
-                    pixelsLeft.remove(neighbor.getNeighbor());
                     addedIds[neighbor.getNeighbor().getId()] = true;
                 }
             }
@@ -86,15 +85,15 @@ class Individual extends Thread {
                 Pixel bestNeighbor = bestPixelNeighbor.getNeighbor(); // Best neighbor of best pixel
 
                 // Update lists
-                possibleNeighbors.remove(bestPixelNeighbor);
                 chromosome.set(bestNeighbor.getId(), bestPixel.getId()); // Update chromosome: ID == Index
+                possibleNeighbors.remove(bestPixelNeighbor);
+                pixelsLeft.remove(bestNeighbor);
                 segment.addSegmentPixel(bestNeighbor);
                 bestNeighbor.setSegment(segment);
 
                 for (PixelNeighbor neighbor : bestNeighbor.getPixelNeighbors()) { // Make Neighbors of bestNeighbor available for selection
                     if (neighbor.getColorDistance() < GeneticAlgorithm.initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {
                         possibleNeighbors.add(neighbor);
-                        pixelsLeft.remove(neighbor.getNeighbor());
                         addedIds[neighbor.getNeighbor().getId()] = true;
                     }
                 }
@@ -124,38 +123,51 @@ class Individual extends Thread {
             currentPixel.setSegment(segment);
             pixelsLeft.remove(currentPixel);
 
-            for (PixelNeighbor neighbor : currentPixel.getPixelNeighbors()) { // Make Neighbors of randomPixel available for selection
-                if (chromosome.get(neighbor.getNeighbor().getId()) == currentPixel.getId() && !addedIds[neighbor.getNeighbor().getId()]) {
-                    segment.addSegmentPixel(neighbor.getNeighbor());
+            for (PixelNeighbor pixelNeighbor : currentPixel.getPixelNeighbors()) { // Make Neighbors of randomPixel available for selection
+                if (chromosome.get(pixelNeighbor.getNeighbor().getId()) == currentPixel.getId() && !addedIds[pixelNeighbor.getNeighbor().getId()]) {  // Neighbor pointing to current pixel
+                    segment.addSegmentPixel(pixelNeighbor.getNeighbor());
+                    addedIds[pixelNeighbor.getNeighbor().getId()] = true;
+                    pixelNeighbor.getNeighbor().setSegment(segment);
+                    pixelsLeft.remove(pixelNeighbor.getNeighbor());
                 }
+            }
+
+            Pixel currentTargetPixel = GeneticAlgorithm.pixels.get(chromosome.get(currentPixel.getId()));
+
+            if (!addedIds[currentTargetPixel.getId()]) {
+                segment.addSegmentPixel(currentTargetPixel);
+                addedIds[currentTargetPixel.getId()] = true;
+                currentTargetPixel.setSegment(segment);
+                pixelsLeft.remove(currentTargetPixel);
             }
 
             int currentPixelIndex = 1;
             while (currentPixelIndex < segment.getSegmentPixels().size()) {
                 currentPixel = segment.getSegmentPixels().get(currentPixelIndex);
-                addedIds[currentPixel.getId()] = true;
-                currentPixel.setSegment(segment);
-                pixelsLeft.remove(currentPixel);
 
-                for (PixelNeighbor neighbor : currentPixel.getPixelNeighbors()) { // Make Neighbors of randomPixel available for selection
-                    if (chromosome.get(neighbor.getNeighbor().getId()) == currentPixel.getId() && !addedIds[neighbor.getNeighbor().getId()]) {
-                        segment.addSegmentPixel(neighbor.getNeighbor());
+                for (PixelNeighbor pixelNeighbor : currentPixel.getPixelNeighbors()) { // Make Neighbors of randomPixel available for selection
+                    if (chromosome.get(pixelNeighbor.getNeighbor().getId()) == currentPixel.getId() && !addedIds[pixelNeighbor.getNeighbor().getId()]) {  // Neighbor pointing to current pixel
+                        segment.addSegmentPixel(pixelNeighbor.getNeighbor());
+                        addedIds[pixelNeighbor.getNeighbor().getId()] = true;
+                        pixelNeighbor.getNeighbor().setSegment(segment);
+                        pixelsLeft.remove(pixelNeighbor.getNeighbor());
                     }
                 }
 
-                currentPixelIndex++; // Next pixel in segment
+                currentTargetPixel = GeneticAlgorithm.pixels.get(chromosome.get(currentPixel.getId()));
+
+                if (!addedIds[currentTargetPixel.getId()]) {
+                    segment.addSegmentPixel(currentTargetPixel);
+                    addedIds[currentTargetPixel.getId()] = true;
+                    currentTargetPixel.setSegment(segment);
+                    pixelsLeft.remove(currentTargetPixel);
+                }
+
+                currentPixelIndex++;
             }
 
             segments.add(segment);
-
-            for (int i = 0; i < segment.getSegmentPixels().size(); i++) {
-                for (int j = 0; j < segment.getSegmentPixels().size(); j++) {
-                    if (i != j && segment.getSegmentPixels().get(i) == segment.getSegmentPixels().get(j)) {
-                        throw new Error("Duplicates in Segment");
-                    }
-                }
-            }
-        } // Segment finished
+        }
     }
 
     private void calculateObjectiveFunctions() {

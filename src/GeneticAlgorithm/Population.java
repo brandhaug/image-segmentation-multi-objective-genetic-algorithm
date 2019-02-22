@@ -55,32 +55,35 @@ class Population {
             Individual i = new Individual(individuals.get(randomIndex).getChromosome());
             i.start();
             newIndividuals.add(i);
-//            // Selection
-//            Individual parent = tournament();
-//            Individual otherParent = tournament();
-//
-//            // Crossover
-//            List<List<Integer>> newChromosomes = crossOver(parent, otherParent, GeneticAlgorithm.numberOfSplits);
-//
-//            // Mutation
-//            for (List<Integer> newChromosome : newChromosomes) {
-//                if (newIndividuals.size() != GeneticAlgorithm.populationSize) {
-//                    double random = Utils.randomDouble();
-//                    if (random < GeneticAlgorithm.mutationRate) {
+            // Selection
+            Individual parent = tournament();
+            Individual otherParent = tournament();
+
+            // Crossover
+            List<List<Integer>> newChromosomes = crossOver(parent, otherParent, GeneticAlgorithm.numberOfSplits);
+
+            // Mutation
+            for (List<Integer> newChromosome : newChromosomes) {
+                if (newIndividuals.size() != GeneticAlgorithm.populationSize) {
+                    double random = Utils.randomDouble();
+                    if (random < GeneticAlgorithm.mutationRate) {
 //                        swapMutate(newChromosome);
-//                    }
-//
-//                    // Add offspring
-//                    Individual newIndividual = new Individual(newChromosome);
-//                    newIndividuals.add(newIndividual);
-//                }
-//            }
+                    }
+
+                    // Add offspring
+                    Individual newIndividual = new Individual(newChromosome);
+                    newIndividual.start();
+                    newIndividuals.add(newIndividual);
+                }
+            }
         }
 
+        System.out.println("Starting new generation");
+        final long startTime2 = System.currentTimeMillis();
         for (Individual newIndividual : newIndividuals) {
             newIndividual.join(); // Wait for thread to terminate
         }
-//        System.out.println("Segments in offspring calculated in " + ((System.currentTimeMillis() - startTime2) / 1000) + "s");
+        System.out.println("Segments in offspring calculated in " + ((System.currentTimeMillis() - startTime2) / 1000) + "s");
 
         individuals = newIndividuals;
 
@@ -251,6 +254,10 @@ class Population {
         }
 
         if (newChromosome.size() != parent.getChromosome().size()) {
+            throw new Error("Chromosomes are different size");
+        }
+
+        if (newChromosome.size() != newChromosome2.size()) {
             throw new Error("Chromosomes are different size");
         }
 
