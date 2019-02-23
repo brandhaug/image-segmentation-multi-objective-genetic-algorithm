@@ -3,8 +3,17 @@ package GeneticAlgorithm;
 import Main.GuiController;
 import javafx.scene.canvas.GraphicsContext;
 
+import javax.imageio.ImageIO;
 import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -14,11 +23,13 @@ public class GeneticAlgorithm {
 
     // Parameters
     final static int populationSize = 20; // 20-100 dependent on problem
-    //    private final double crossOverRate = 0.7; // 80%-95%
-    final static double mutationRate = 0.01; // 0.5%-1%.
+//        private final double crossOverRate = 0.7; // 80%-95%
+    final static double mutationRate = 0.05; // 0.5%-1%.
     final static int tournamentSize = 3; // Number of members in tournament selection
-    final static double initialColorDistanceThreshold = 15.0; // Color Distance Threshold for initial population
-    final static int numberOfSplits = 2;
+
+    final static double minInitialColorDistanceThreshold = 10.0; // Minimum Color Distance Threshold for initial population
+    final static double maxInitialColorDistanceThreshold = 20.0; // Maximum Color Distance Threshold for initial population
+    final static int numberOfSplits = 3;
 
     private Population population;
 
@@ -45,14 +56,9 @@ public class GeneticAlgorithm {
         generation++;
     }
 
-    public void save() {
-    }
-
-    public int getGeneration() {
-        return generation;
-    }
-
     public void render(GraphicsContext gc) {
+        final long startTime = System.currentTimeMillis();
+
         List<Segment> segments = population.getAlphaSegments();
         int colorIndex = 0;
         for (Segment segment : segments) {
@@ -71,10 +77,10 @@ public class GeneticAlgorithm {
                 colorIndex++;
             }
         }
+        System.out.println("Pareto optimal solution rendered in " + ((System.currentTimeMillis() - startTime)) + "ms");
     }
 
     private Pixel[][] generateGenes(Color[][] colorArr) {
-        System.out.println("Generating genes");
         final long startTime = System.currentTimeMillis();
         Pixel[][] pixelArr = new Pixel[GuiController.imageHeight][GuiController.imageWidth];
 
@@ -92,7 +98,6 @@ public class GeneticAlgorithm {
     }
 
     private void findAndAddAllPixelNeighbors(Pixel[][] pixelArr) {
-        System.out.println("Finding and adding all PixelNeighbors");
         final long startTime = System.currentTimeMillis();
 
         for (int y = 0; y < GuiController.imageHeight; y++) {
@@ -134,5 +139,81 @@ public class GeneticAlgorithm {
         }
 
         System.out.println("Neighbors added in " + ((System.currentTimeMillis() - startTime)) + "ms");
+    }
+
+    public void saveParetoOptimalIndividualsToFile(String fileName, Timestamp timestamp) throws IOException {
+        List<Individual> paretoFront = population.getParetoFront();
+
+        for (Individual individual : paretoFront) {
+            byte[] segmentLists = new byte[pixels.size()];
+            Arrays.fill(segmentLists, (byte) 255);
+
+            for (Segment segment : individual.getSegments()) {
+                for (Pixel pixel : segment.getSegmentPixels()) {
+                    boolean mostEast = true;
+                    boolean mostWest = true;
+                    boolean mostSouth = true;
+                    boolean mostNorth = true;
+                    boolean add = true;
+
+                    for (Pixel pixelToCompare : segment.getSegmentPixels()) {
+                        if (pixel != pixelToCompare) { // Not same pixel
+                            if (pixel.getY() == pixelToCompare.getY()) { // Same y
+                                if (pixel.getX() < pixelToCompare.getX()) { // Pixel is west of pixelToCompare
+                                    mostEast = false;
+                                } else if (pixel.getX() > pixelToCompare.getX()) { // Pixel is east of pixelToCompare
+                                    mostWest = false;
+                                }
+                            } else if (pixel.getX() == pixelToCompare.getX()) { // Same x
+                                if (pixel.getY() < pixelToCompare.getY()) { // Pixel is north of pixelToCompare
+                                    mostSouth = false;
+                                } else if (pixel.getY() > pixelToCompare.getY()) { // Pixel is south of pixelToCompare
+                                    mostNorth = false;
+                                }
+                            }
+
+                            if (!mostEast && !mostWest && !mostNorth && !mostSouth) {
+                                add = false;
+                                break;
+                            }
+                        }
+                    } // PixelToCompare finished
+
+                    if (add) {
+                        segmentLists[pixel.getId()] = 0;
+                    }
+                } // Segment finished
+            } // Pareto individual finished
+
+            saveIndividualToImageFile(fileName, timestamp, paretoFront.indexOf(individual) + 1, segmentLists);
+        }
+    }
+
+    private void saveIndividualToImageFile(String fileName, Timestamp timestamp, int individualIndex, byte[] segmentLists) throws IOException {
+        BufferedImage bufferedImage = new BufferedImage(GuiController.imageWidth, GuiController.imageHeight, BufferedImage.TYPE_BYTE_GRAY);
+        final byte[] dataBuffer = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
+        System.arraycopy(segmentLists, 0, dataBuffer, 0, segmentLists.length);
+
+        File jpegFile = new File("solution-" + fileName + "-" + timestamp.getTime() + "-" + individualIndex + ".jpg");
+        ImageIO.write(bufferedImage, "jpg", jpegFile);
+    }
+
+    private void saveIndividualToTextFile(String fileName, Timestamp timestamp, int individualIndex, byte[] segmentLists) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter("solution-" + fileName + "-" + timestamp.getTime() + "-" + individualIndex + ".txt"));
+        for (int i = 0; i < segmentLists.length; i++) {
+            writer.write(segmentLists[i]);
+
+            if (i != 0 && i % GuiController.imageWidth == 0) {
+                writer.newLine();
+            } else if (i != segmentLists.length - 1) {
+                writer.write(",");
+            }
+        }
+
+        writer.close();
+    }
+
+    public int getGeneration() {
+        return generation;
     }
 }

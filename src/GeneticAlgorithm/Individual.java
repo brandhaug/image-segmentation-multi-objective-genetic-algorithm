@@ -26,9 +26,12 @@ class Individual extends Thread {
 
     private boolean initialize;
 
+    private double initialColorDistanceThreshold;
+
     Individual() {
         this.chromosome = new ArrayList<>(GeneticAlgorithm.initialChromosome);
         this.initialize = true;
+        this.initialColorDistanceThreshold = Utils.randomDouble(GeneticAlgorithm.minInitialColorDistanceThreshold, GeneticAlgorithm.maxInitialColorDistanceThreshold);
     }
 
     Individual(List<Integer> chromosome) {
@@ -71,7 +74,7 @@ class Individual extends Thread {
             addedIds[randomIndex] = true;
 
             for (PixelNeighbor neighbor : randomPixel.getPixelNeighbors()) { // Make Neighbors of randomPixel available for selection
-                if (neighbor.getColorDistance() < GeneticAlgorithm.initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {
+                if (neighbor.getColorDistance() < initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {
                     possibleNeighbors.add(neighbor);
                     addedIds[neighbor.getNeighbor().getId()] = true;
                 }
@@ -92,7 +95,7 @@ class Individual extends Thread {
                 bestNeighbor.setSegment(segment);
 
                 for (PixelNeighbor neighbor : bestNeighbor.getPixelNeighbors()) { // Make Neighbors of bestNeighbor available for selection
-                    if (neighbor.getColorDistance() < GeneticAlgorithm.initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {
+                    if (neighbor.getColorDistance() < initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {
                         possibleNeighbors.add(neighbor);
                         addedIds[neighbor.getNeighbor().getId()] = true;
                     }
@@ -239,5 +242,15 @@ class Individual extends Thread {
 
     List<Integer> getChromosome() {
         return chromosome;
+    }
+
+    @Override
+    public String toString() {
+        return "Individual{" +
+                "overallDeviation=" + overallDeviation +
+                ", connectivity=" + connectivity +
+                ", rank=" + rank +
+                ", crowdingDistance=" + crowdingDistance +
+                '}';
     }
 }

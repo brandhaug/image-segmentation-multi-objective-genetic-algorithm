@@ -14,8 +14,7 @@ public class ImageUtils {
 
     public BufferedImage readImage(String fileName) throws IOException {
         ClassLoader classLoader = getClass().getClassLoader();
-        BufferedImage bufferedImage = ImageIO.read(new File(Objects.requireNonNull(classLoader.getResource("resources/images/" + fileName)).getFile()));
-        return bufferedImage;
+        return ImageIO.read(new File(Objects.requireNonNull(classLoader.getResource("resources/images/" + fileName)).getFile()));
     }
 
     public Color[][] parseBufferedImageTo2DArray(BufferedImage bufferedImage) {

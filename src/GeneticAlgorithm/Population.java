@@ -30,6 +30,10 @@ class Population {
         for (Individual individual : individuals) {
             individual.join(); // Wait for thread to terminate
         }
+
+        fastNonDominatedSort();
+        calculateCrowdingDistances();
+
         System.out.println(individuals.size() + " individuals created in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
     }
 
@@ -37,24 +41,12 @@ class Population {
      * NSGA-II
      */
     void tick() throws InterruptedException {
-        System.out.println("Starting new generation");
         final long startTime = System.currentTimeMillis();
-
-        fastNonDominatedSort();
-        calculateCrowdingDistances();
-
-//        int numberOfParentsToKeep = (populationSize - (int) (populationSize * crossOverRate));
-//        List<Individual> newIndividuals = new ArrayList<>(individuals.subList(0, numberOfParentsToKeep));
-
-        List<Individual> newIndividuals = paretoFront;
-
         System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
 
-        while (newIndividuals.size() != GeneticAlgorithm.populationSize) {
-            int randomIndex = Utils.randomIndex(individuals.size());
-            Individual i = new Individual(individuals.get(randomIndex).getChromosome());
-            i.start();
-            newIndividuals.add(i);
+        List<Individual> offspringIndividuals = new ArrayList<>();
+
+        while (offspringIndividuals.size() != GeneticAlgorithm.populationSize) {
             // Selection
             Individual parent = tournament();
             Individual otherParent = tournament();
@@ -64,30 +56,34 @@ class Population {
 
             // Mutation
             for (List<Integer> newChromosome : newChromosomes) {
-                if (newIndividuals.size() != GeneticAlgorithm.populationSize) {
+                if (offspringIndividuals.size() != GeneticAlgorithm.populationSize) {
                     double random = Utils.randomDouble();
                     if (random < GeneticAlgorithm.mutationRate) {
-//                        swapMutate(newChromosome);
+                        swapMutate(newChromosome);
                     }
 
                     // Add offspring
                     Individual newIndividual = new Individual(newChromosome);
                     newIndividual.start();
-                    newIndividuals.add(newIndividual);
+                    offspringIndividuals.add(newIndividual);
                 }
             }
         }
 
-        System.out.println("Starting new generation");
         final long startTime2 = System.currentTimeMillis();
-        for (Individual newIndividual : newIndividuals) {
+        for (Individual newIndividual : offspringIndividuals) {
             newIndividual.join(); // Wait for thread to terminate
         }
         System.out.println("Segments in offspring calculated in " + ((System.currentTimeMillis() - startTime2) / 1000) + "s");
 
-        individuals = newIndividuals;
+        individuals.addAll(offspringIndividuals);
 
-        individuals.sort(Comparator.comparingDouble(Individual::getRank));
+        fastNonDominatedSort();
+        calculateCrowdingDistances();
+
+        individuals.sort(Comparator.comparingDouble(Individual::getRank).thenComparing(Individual::getCrowdingDistance, Collections.reverseOrder()));
+        individuals = individuals.subList(0, GeneticAlgorithm.populationSize);
+
         System.out.println("New generation generated in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
     }
 
@@ -96,7 +92,6 @@ class Population {
      * Based on page 3 in NSGA-II paper by Kalyanmoy Deb, Amrit Pratap, Sameer Agarwal, and T. Meyarivan
      */
     private void fastNonDominatedSort() {
-        System.out.println("Non-dominated sorting");
         final long startTime = System.currentTimeMillis();
         List<Individual> front = new ArrayList<>(); // F
 
@@ -143,7 +138,6 @@ class Population {
     }
 
     private void calculateCrowdingDistances() {
-        System.out.println("Calculating crowding distances");
         final long startTime = System.currentTimeMillis();
 
         // Reset distances
@@ -224,7 +218,6 @@ class Population {
     }
 
     private List<List<Integer>> crossOver(Individual parent, Individual otherParent, int splits) {
-        System.out.println("Performing crossOver");
         final long startTime = System.currentTimeMillis();
 
         if (parent.getChromosome().size() != otherParent.getChromosome().size()) {
@@ -278,5 +271,9 @@ class Population {
 
     List<Segment> getAlphaSegments() {
         return individuals.get(0).getSegments();
+    }
+
+    List<Individual> getParetoFront() {
+        return paretoFront;
     }
 }

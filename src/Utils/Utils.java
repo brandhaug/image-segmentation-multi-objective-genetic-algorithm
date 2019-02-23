@@ -32,6 +32,14 @@ public class Utils {
     }
 
     /**
+     * @return A random double between [min, max]
+     */
+    public static double randomDouble(double min, double max) {
+        Random random = new Random();
+        return min + (max - min) * random.nextDouble();
+    }
+
+    /**
      * Generates k - 1 partition indices used for splitting lists
      */
     public static int[] generatePartitionIndices(int size, int k) {

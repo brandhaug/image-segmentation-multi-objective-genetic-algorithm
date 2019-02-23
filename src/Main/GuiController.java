@@ -13,11 +13,13 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.image.Image;
+import javafx.scene.layout.VBox;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +32,8 @@ public class GuiController {
     private AnchorPane anchorPane;
     @FXML
     private Canvas canvas;
+    @FXML
+    private VBox vbox;
     @FXML
     private Button startButton; // Toggles between "Start" and "Pause", depending on state
     @FXML
@@ -44,9 +48,10 @@ public class GuiController {
     private ComboBox imageSelector; // Shows benchmark fitness for current map
 
     // Canvas
-    public final static int CANVAS_WIDTH = 500; // Canvas width set in View.fxml
-    public final static int CANVAS_HEIGHT = 500; // Canvas width set in View.fxml
-    public final static int CANVAS_MARGIN = 10; // The margin avoids that extreme points are drawn outside canvas
+    private int canvasWidth;
+    private int canvasHeight;
+
+    private int vboxWidth = 200;
 
     public static int imageWidth;
     public static int imageHeight;
@@ -55,28 +60,34 @@ public class GuiController {
 
     private BufferedImage bufferedImage;
 
-
     // States
     private boolean paused = true;
     private boolean initialized = false;
+
+    // Settings
+    public final static boolean RENDER = true;
 
     private String fileName;
     private GeneticAlgorithm ga;
 
     @FXML
     private void initialize() {
-        System.out.println("Initializing GUI");
-        initializeGUI();
-        gc = canvas.getGraphicsContext2D();
+        if (!initialized) {
+            initializeImageSelector();
+        }
+
         ImageUtils imageUtils = new ImageUtils();
 
         try {
-            System.out.println("Reading and drawing image");
+            final long startTime = System.currentTimeMillis();
             bufferedImage = imageUtils.readImage(fileName);
             imageWidth = bufferedImage.getWidth();
             imageHeight = bufferedImage.getHeight();
+            initializeGUI();
             Color[][] colorArr = imageUtils.parseBufferedImageTo2DArray(bufferedImage);
+            gc = canvas.getGraphicsContext2D();
             renderImage();
+            System.out.println("Image read and rendered in " + ((System.currentTimeMillis() - startTime)) + "ms");
             ga = new GeneticAlgorithm(colorArr);
         } catch (IOException e) {
             e.printStackTrace();
@@ -105,8 +116,10 @@ public class GuiController {
     }
 
     private void render() {
-        gc.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); // Clear canvas
-        ga.render(gc); // Renders alphaSolution of Population in GeneticAlgorithm
+        if (RENDER) {
+            gc.clearRect(0, 0, canvasWidth, canvasHeight); // Clear canvas
+            ga.render(gc); // Renders alphaSolution of Population in GeneticAlgorithm
+        }
     }
 
     private void renderImage() {
@@ -120,10 +133,13 @@ public class GuiController {
         startButton.setVisible(true);
         startButton.setText("Start");
         imageSelector.setVisible(true);
-
-        if (!initialized) {
-            initializeImageSelector();
-        }
+        canvasHeight = imageHeight;
+        canvasWidth = imageWidth;
+        canvas.setHeight(imageHeight);
+        canvas.setWidth(imageWidth);
+        vbox.setLayoutX(canvasWidth);
+        vbox.setPrefHeight(canvasHeight);
+        vbox.setPrefWidth(vboxWidth);
     }
 
     private void initializeImageSelector() {
@@ -186,6 +202,15 @@ public class GuiController {
 
     @FXML
     private void save() {
-        ga.save();
+        final long startTime = System.currentTimeMillis();
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        String fileNameNoExtension = fileName.substring(0, fileName.lastIndexOf('.'));
+
+        try {
+            ga.saveParetoOptimalIndividualsToFile(fileNameNoExtension, timestamp);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Pareto optimal solutions saved in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
     }
 }
