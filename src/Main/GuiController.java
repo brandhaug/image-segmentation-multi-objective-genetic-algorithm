@@ -164,6 +164,7 @@ public class GuiController {
         yAxis.setLabel("Connectivity");
         paretoSeries = new XYChart.Series();
         restOfPopulationSeries = new XYChart.Series();
+        scatterChart.getData().clear();
         scatterChart.getData().addAll(paretoSeries, restOfPopulationSeries);
     }
 
