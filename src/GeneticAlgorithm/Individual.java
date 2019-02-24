@@ -44,9 +44,7 @@ class Individual extends Thread {
         if (initialize) {
             generateInitialIndividual2();
         } else {
-//            repairChromosome();
-            calculateSegments();
-//            repairSegments();
+            calculateSegments2();
         }
 
         calculateObjectiveFunctions();
@@ -210,6 +208,39 @@ class Individual extends Thread {
             }
 
             segments.add(segment);
+        }
+    }
+
+    private void calculateSegments2() {
+        HashMap<Pixel, Segment> visitedPixels = new HashMap<>();
+        Queue<PixelNeighbor> possiblePixelNeighbors = new LinkedList<>();
+
+        for (int pixelId = 0; pixelId < chromosome.size(); pixelId++) {
+            Pixel pixel = GeneticAlgorithm.pixels.get(pixelId);
+
+            if (!visitedPixels.containsKey(pixel)) {
+                Segment newSegment = new Segment();
+                newSegment.addSegmentPixel(pixel);
+                segments.add(newSegment);
+
+                visitedPixels.put(pixel, newSegment);
+
+                List<PixelNeighbor> pixelNeighbors = GeneticAlgorithm.pixels.get(pixelId).getPixelNeighbors();
+                possiblePixelNeighbors.addAll(pixelNeighbors);
+
+                while (!possiblePixelNeighbors.isEmpty()) {
+                    PixelNeighbor pixelNeighbor = possiblePixelNeighbors.poll();
+                    Pixel selectedNeighbor = pixelNeighbor.getNeighbor();
+                    Pixel selectedPixel = pixelNeighbor.getPixel();
+
+                    if ((chromosome.get(selectedNeighbor.getId()) == selectedPixel.getId() || chromosome.get(selectedPixel.getId()) == selectedNeighbor.getId()) && !visitedPixels.containsKey(selectedNeighbor)) {
+                        Segment segment = visitedPixels.get(selectedPixel);
+                        segment.addSegmentPixel(selectedNeighbor);
+                        possiblePixelNeighbors.addAll(selectedNeighbor.getPixelNeighbors());
+                        visitedPixels.put(selectedNeighbor, segment);
+                    }
+                }
+            }
         }
     }
 

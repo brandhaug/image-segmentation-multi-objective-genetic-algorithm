@@ -22,9 +22,9 @@ import java.util.List;
 public class GeneticAlgorithm {
 
     // Parameters
-    final static int populationSize = 10; // 20-100 dependent on problem
+    final static int populationSize = 50; // 20-100 dependent on problem
 //        private final double crossOverRate = 0.7; // 80%-95%
-    final static double mutationRate = 0.05; // 0.5%-1%.
+    final static double mutationRate = 0.2; // 0.5%-1%.
     final static int tournamentSize = 3; // Number of members in tournament selection
 
     final static double minInitialColorDistanceThreshold = 10.0; // Minimum Color Distance Threshold for initial population
@@ -38,14 +38,16 @@ public class GeneticAlgorithm {
     private Population population;
 
     // Initial lists (read only)
-    final static List<Pixel> pixels = new ArrayList<>();
-    final static List<Integer> initialChromosome = new ArrayList<>(); // All pixels pointing to self as default
+    static List<Pixel> pixels;
+    static List<Integer> initialChromosome; // All pixels pointing to self as default
 
     private Pixel[][] pixelArr;
 
     private int generation = 0;
 
     public GeneticAlgorithm(Color[][] colorArr) {
+        pixels = new ArrayList<>();
+        initialChromosome = new ArrayList<>();
         Pixel.resetIdentification(); // Resets IDs in pixels, so it can be used for list retrieving
         pixelArr = generateGenes(colorArr);
     }
@@ -64,22 +66,22 @@ public class GeneticAlgorithm {
         final long startTime = System.currentTimeMillis();
 
         List<Segment> segments = population.getAlphaSegments();
-        int colorIndex = 0;
+//        int colorIndex = 0;
         for (Segment segment : segments) {
-//            Color awtColor = segment.getAverageColor();
-//            javafx.scene.paint.Color fxColor = javafx.scene.paint.Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
-//            gc.setFill(fxColor);
-            javafx.scene.paint.Color[] colors = {javafx.scene.paint.Color.RED, javafx.scene.paint.Color.ORANGE, javafx.scene.paint.Color.GOLD, javafx.scene.paint.Color.GREENYELLOW, javafx.scene.paint.Color.GREEN, javafx.scene.paint.Color.AQUA, javafx.scene.paint.Color.BLUE, javafx.scene.paint.Color.INDIGO, javafx.scene.paint.Color.VIOLET}; // Possible depot colors
-            gc.setFill(colors[colorIndex]);
+            Color awtColor = segment.getAverageColor();
+            javafx.scene.paint.Color fxColor = javafx.scene.paint.Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
+            gc.setFill(fxColor);
+//            javafx.scene.paint.Color[] colors = {javafx.scene.paint.Color.RED, javafx.scene.paint.Color.ORANGE, javafx.scene.paint.Color.GOLD, javafx.scene.paint.Color.GREENYELLOW, javafx.scene.paint.Color.GREEN, javafx.scene.paint.Color.AQUA, javafx.scene.paint.Color.BLUE, javafx.scene.paint.Color.INDIGO, javafx.scene.paint.Color.VIOLET}; // Possible depot colors
+//            gc.setFill(colors[colorIndex]);
             for (Pixel pixel : segment.getSegmentPixels()) {
                 gc.fillRect(pixel.getX(), pixel.getY(), 1, 1);
             }
 
-            if (colorIndex == colors.length - 1) {
-                colorIndex = 0;
-            } else {
-                colorIndex++;
-            }
+//            if (colorIndex == colors.length - 1) {
+//                colorIndex = 0;
+//            } else {
+//                colorIndex++;
+//            }
         }
         System.out.println("Pareto optimal solution rendered in " + ((System.currentTimeMillis() - startTime)) + "ms");
     }

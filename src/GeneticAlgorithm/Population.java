@@ -218,8 +218,6 @@ class Population {
     }
 
     private List<List<Integer>> crossOver(Individual parent, Individual otherParent, int splits) {
-        final long startTime = System.currentTimeMillis();
-
         if (parent.getChromosome().size() != otherParent.getChromosome().size()) {
             throw new Error("Chromosomes are different size");
         }
@@ -253,8 +251,6 @@ class Population {
         if (newChromosome.size() != newChromosome2.size()) {
             throw new Error("Chromosomes are different size");
         }
-
-        System.out.println("Crossover executed in " + ((System.currentTimeMillis() - startTime)) + "ms");
 
         newChromosomes.add(newChromosome);
         newChromosomes.add(newChromosome2);
