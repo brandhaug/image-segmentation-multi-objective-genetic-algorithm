@@ -42,9 +42,11 @@ class Individual extends Thread {
     @Override
     public void run() {
         if (initialize) {
-            generateInitialIndividual();
+            generateInitialIndividual2();
         } else {
+//            repairChromosome();
             calculateSegments();
+//            repairSegments();
         }
 
         calculateObjectiveFunctions();
@@ -55,7 +57,7 @@ class Individual extends Thread {
      * TODO: (Probably not necessary) Instead of just checking if pixelsLeft contains neighbor, wait with removing pixel in and check if this neighbor relation is better than current neighbor relation in list. This could potentially remove stochastic selection.
      */
     private void generateInitialIndividual() {
-        List<PixelNeighbor> possibleNeighbors = new ArrayList<>(); // Support array for all possible visits. Sorted by colorDistance
+        PriorityQueue<PixelNeighbor> possibleNeighbors = new PriorityQueue<>(); // Support array for all possible visits. Sorted by colorDistance
         List<Pixel> pixelsLeft = new ArrayList<>(GeneticAlgorithm.pixels); // Support array for removing added pixels to make randomIndex effective
 
         boolean[] addedIds = new boolean[GeneticAlgorithm.pixels.size()]; // Support array for seeing which pixels is already added. It removes the need for using the ineffective list.contains()
@@ -65,16 +67,16 @@ class Individual extends Thread {
             Segment segment = new Segment();
 
             int randomIndex = Utils.randomIndex(pixelsLeft.size());
-            Pixel randomPixel = pixelsLeft.get(randomIndex); // Random first best pixel
+            Pixel bestPixel = pixelsLeft.get(randomIndex); // Random first best pixel
 
             // Update lists
-            segment.addSegmentPixel(randomPixel);
-            randomPixel.setSegment(segment);
-            pixelsLeft.remove(randomPixel);
+            segment.addSegmentPixel(bestPixel);
+            bestPixel.setSegment(segment);
+            pixelsLeft.remove(bestPixel);
             addedIds[randomIndex] = true;
 
-            for (PixelNeighbor neighbor : randomPixel.getPixelNeighbors()) { // Make Neighbors of randomPixel available for selection
-                if (neighbor.getColorDistance() < initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {
+            for (PixelNeighbor neighbor : bestPixel.getPixelNeighbors()) { // Make Neighbors of randomPixel available for selection
+                if (neighbor.getColorDistance() < initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) { // Under threshold and not added
                     possibleNeighbors.add(neighbor);
                     addedIds[neighbor.getNeighbor().getId()] = true;
                 }
@@ -82,9 +84,8 @@ class Individual extends Thread {
 
             while (possibleNeighbors.size() != 0) {
                 // Sort and get best neighbor
-                possibleNeighbors.sort(Comparator.comparingDouble(PixelNeighbor::getColorDistance)); // Sort by colorDistance
-                PixelNeighbor bestPixelNeighbor = possibleNeighbors.get(0);
-                Pixel bestPixel = bestPixelNeighbor.getPixel();
+                PixelNeighbor bestPixelNeighbor = possibleNeighbors.remove();
+                bestPixel = bestPixelNeighbor.getPixel();
                 Pixel bestNeighbor = bestPixelNeighbor.getNeighbor(); // Best neighbor of best pixel
 
                 // Update lists
@@ -95,7 +96,7 @@ class Individual extends Thread {
                 bestNeighbor.setSegment(segment);
 
                 for (PixelNeighbor neighbor : bestNeighbor.getPixelNeighbors()) { // Make Neighbors of bestNeighbor available for selection
-                    if (neighbor.getColorDistance() < initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {
+                    if (neighbor.getColorDistance() < initialColorDistanceThreshold && !addedIds[neighbor.getNeighbor().getId()]) {  // Under threshold and not added
                         possibleNeighbors.add(neighbor);
                         addedIds[neighbor.getNeighbor().getId()] = true;
                     }
@@ -103,6 +104,45 @@ class Individual extends Thread {
             } // Possible neighbors empty (one segmentation finished)
 
             segments.add(segment);
+        }
+    }
+
+    private void generateInitialIndividual2() {
+        HashMap<Pixel, Segment> visitedPixels = new HashMap<>();
+        PriorityQueue<PixelNeighbor> possibleNeighbors = new PriorityQueue<>(); // Support array for all possible visits. Sorted by colorDistance
+
+        int numberOfSegments = Utils.randomInt(GeneticAlgorithm.minSegments, GeneticAlgorithm.maxSegments);
+
+        // Initialize segments, add neighbors of root pixels
+        while (segments.size() != numberOfSegments) {
+            Pixel rootPixel;
+
+            do {
+                int randomIndex = Utils.randomIndex(GeneticAlgorithm.pixels.size());
+                rootPixel = GeneticAlgorithm.pixels.get(randomIndex); // Random first best pixel
+            } while (visitedPixels.containsKey(rootPixel));
+
+            Segment newSegment = new Segment();
+            newSegment.addSegmentPixel(rootPixel);
+            segments.add(newSegment);
+
+            visitedPixels.put(rootPixel, newSegment);
+            possibleNeighbors.addAll(rootPixel.getPixelNeighbors());
+        }
+
+        // Add all neighbors
+        while (!possibleNeighbors.isEmpty()) {
+            PixelNeighbor bestPixelNeighbor = possibleNeighbors.remove();
+            Pixel bestNeighbor = bestPixelNeighbor.getNeighbor();
+            Pixel bestPixel = bestPixelNeighbor.getPixel();
+            Segment segment = visitedPixels.get(bestPixel);
+
+            if (!visitedPixels.containsKey(bestNeighbor)) {
+                possibleNeighbors.addAll(bestNeighbor.getPixelNeighbors());
+                visitedPixels.put(bestNeighbor, segment);
+                chromosome.set(bestNeighbor.getId(), bestPixel.getId());
+                segment.addSegmentPixel(bestNeighbor);
+            }
         }
     }
 

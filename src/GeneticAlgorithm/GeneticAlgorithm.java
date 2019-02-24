@@ -29,6 +29,10 @@ public class GeneticAlgorithm {
 
     final static double minInitialColorDistanceThreshold = 10.0; // Minimum Color Distance Threshold for initial population
     final static double maxInitialColorDistanceThreshold = 20.0; // Maximum Color Distance Threshold for initial population
+
+    final static int minSegments = 3;
+    final static int maxSegments = 50;
+
     final static int numberOfSplits = 3;
 
     private Population population;
@@ -43,7 +47,7 @@ public class GeneticAlgorithm {
 
     public GeneticAlgorithm(Color[][] colorArr) {
         Pixel.resetIdentification(); // Resets IDs in pixels, so it can be used for list retrieving
-        pixelArr = generateGenes(colorArr); // TODO: Maybe not allowed to generate genes before pressing start? If so, move to tick where generation == 0
+        pixelArr = generateGenes(colorArr);
     }
 
     public void tick() throws InterruptedException {

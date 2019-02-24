@@ -3,7 +3,7 @@ package GeneticAlgorithm;
 /**
  * Represents the neighborhood relationship between two pixels
  */
-class PixelNeighbor {
+class PixelNeighbor implements Comparable<PixelNeighbor> {
     private Pixel pixel;
     private Pixel neighbor;
     private double colorDistance; // Euclidean Color Distance
@@ -12,6 +12,16 @@ class PixelNeighbor {
         this.pixel = pixel;
         this.neighbor = neighbor;
         this.colorDistance = colorDistance;
+    }
+
+    @Override
+    public int compareTo(PixelNeighbor o) {
+        if (this.colorDistance > o.colorDistance) {
+            return 1;
+        } else if (this.colorDistance < o.colorDistance) {
+            return -1;
+        }
+        return 0;
     }
 
     Pixel getPixel() {

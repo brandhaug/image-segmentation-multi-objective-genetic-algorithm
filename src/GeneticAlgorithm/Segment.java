@@ -98,11 +98,15 @@ class Segment {
         averageColor = new Color(averageRed, averageGreen, averageBlue);
     }
 
-    public Color getCentroidColor() {
+    Color getCentroidColor() {
         return centroidColor;
     }
 
-    public Color getAverageColor() {
+    Color getAverageColor() {
         return averageColor;
+    }
+
+    int getSegmentSize() {
+        return segmentPixels.size();
     }
 }

@@ -25,6 +25,11 @@ public class Utils {
         return limit == 0 ? 0 : random.nextInt(limit);
     }
 
+    public static int randomInt(int min, int max) {
+        Random random = new Random();
+        return min + random.nextInt(max - min + 1);
+    }
+
     /**
      * @return A random double [0, 1]
      */
