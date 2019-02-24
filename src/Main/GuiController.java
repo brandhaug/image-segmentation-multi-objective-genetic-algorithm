@@ -8,22 +8,24 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.ScatterChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.image.Image;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
 
 public class GuiController {
 
@@ -33,7 +35,9 @@ public class GuiController {
     @FXML
     private Canvas canvas;
     @FXML
-    private VBox vbox;
+    private VBox vboxRight;
+    @FXML
+    private VBox vboxLeft;
     @FXML
     private Button startButton; // Toggles between "Start" and "Pause", depending on state
     @FXML
@@ -46,12 +50,23 @@ public class GuiController {
     private Label generationLabel; // Shows generation in GeneticAlgorithm
     @FXML
     private ComboBox imageSelector; // Shows benchmark fitness for current map
+    @FXML
+    private HBox hbox;
+    @FXML
+    private ScatterChart scatterChart;
+    @FXML
+    private NumberAxis xAxis;
+    @FXML
+    private NumberAxis yAxis;
+
+    private XYChart.Series paretoSeries;
+    private XYChart.Series restOfPopulationSeries;
 
     // Canvas
     private int canvasWidth;
     private int canvasHeight;
 
-    private int vboxWidth = 200;
+    private final int vboxWidth = 200;
 
     public static int imageWidth;
     public static int imageHeight;
@@ -63,9 +78,6 @@ public class GuiController {
     // States
     private boolean paused = true;
     private boolean initialized = false;
-
-    // Settings
-    public final static boolean RENDER = true;
 
     private String fileName;
     private GeneticAlgorithm ga;
@@ -99,32 +111,11 @@ public class GuiController {
         new AnimationTimer() {
             public void handle(long currentNanoTime) {
                 if (!paused) {
-                    tick(startNanoTime, currentNanoTime);
-                    render();
+                    tick();
+                    render(startNanoTime, currentNanoTime);
                 }
             }
         }.start();
-    }
-
-    private void tick(long startNanoTime, long currentNanoTime) {
-        try {
-            ga.tick();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        updateGUI(startNanoTime, currentNanoTime);
-    }
-
-    private void render() {
-        if (RENDER) {
-            gc.clearRect(0, 0, canvasWidth, canvasHeight); // Clear canvas
-            ga.render(gc); // Renders alphaSolution of Population in GeneticAlgorithm
-        }
-    }
-
-    private void renderImage() {
-        Image image = SwingFXUtils.toFXImage(this.bufferedImage, null);
-        gc.drawImage(image, 0, 0);
     }
 
     private void initializeGUI() {
@@ -137,9 +128,10 @@ public class GuiController {
         canvasWidth = imageWidth;
         canvas.setHeight(imageHeight);
         canvas.setWidth(imageWidth);
-        vbox.setLayoutX(canvasWidth);
-        vbox.setPrefHeight(canvasHeight);
-        vbox.setPrefWidth(vboxWidth);
+        vboxRight.setLayoutX(canvasWidth);
+        vboxRight.setPrefHeight(canvasHeight * 2);
+        vboxRight.setPrefWidth(vboxWidth);
+        initializeScatterChart();
     }
 
     private void initializeImageSelector() {
@@ -152,7 +144,6 @@ public class GuiController {
             throw new IllegalStateException("Map folder is empty");
         }
 
-
         List<String> mapNames = new ArrayList<>();
 
         for (File file : imageFiles) {
@@ -164,6 +155,56 @@ public class GuiController {
         fileName = mapNames.get(0);
         imageSelector.setItems(FXCollections.observableArrayList(mapNames));
         imageSelector.getSelectionModel().selectFirst();
+    }
+
+    private void initializeScatterChart() {
+        vboxLeft.setPrefHeight(canvasHeight * 2);
+        vboxRight.setPrefWidth(canvasWidth);
+        xAxis.setLabel("Overall Deviation");
+        yAxis.setLabel("Connectivity");
+        paretoSeries = new XYChart.Series();
+        restOfPopulationSeries = new XYChart.Series();
+        scatterChart.getData().addAll(paretoSeries, restOfPopulationSeries);
+    }
+
+    private void renderImage() {
+        WritableImage image = SwingFXUtils.toFXImage(this.bufferedImage, null);
+        gc.drawImage(image, 0, 0);
+    }
+
+    private void tick() {
+        try {
+            ga.tick();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void render(long startNanoTime, long currentNanoTime) {
+            gc.clearRect(0, 0, canvasWidth, canvasHeight); // Clear canvas
+            ga.render(gc); // Renders a optimal solution of Population in Genetic Algorithm
+            addToScartChart();
+        updateGUI(startNanoTime, currentNanoTime);
+    }
+
+    private void addToScartChart() {
+        double[][] populationData = ga.getPopulationData();
+
+        final int RANK = 0;
+        final int OVERALL_DEVIATION = 1;
+        final int CONNECTIVITY = 2;
+
+        paretoSeries.getData().clear();
+        restOfPopulationSeries.getData().clear();
+
+        for (double[] data : populationData) {
+            if (data[RANK] == 1) { // Pareto optimal
+                paretoSeries.getData().add(new XYChart.Data(data[OVERALL_DEVIATION], data[CONNECTIVITY]));
+            } else { // Rest of population
+                restOfPopulationSeries.getData().add(new XYChart.Data(data[OVERALL_DEVIATION], data[CONNECTIVITY]));
+            }
+        }
     }
 
     private void updateGUI(long startNanoTime, long currentNanoTime) {

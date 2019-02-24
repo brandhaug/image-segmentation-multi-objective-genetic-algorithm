@@ -29,3 +29,19 @@
 .combo-box {
     -fx-padding: .35em 1em;
 }
+
+.hbox {
+}
+
+.chart-symbol {
+    -fx-background-radius: 0;
+}
+
+.default-color1.chart-symbol { /* cross */
+    -fx-background-color: #0181e2;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-shape: "M2,0 L5,4 L8,0 L10,0 L10,2 L6,5 L10,8 L10,10 L8,10 L5,6 L2,
+    10 L0,10 L0,8 L4,5 L0,2 L0,0 Z";
+}
+

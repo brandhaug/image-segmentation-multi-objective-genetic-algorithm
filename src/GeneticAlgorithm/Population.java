@@ -34,6 +34,7 @@ class Population {
         fastNonDominatedSort();
         calculateCrowdingDistances();
 
+        System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
         System.out.println(individuals.size() + " individuals created in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
     }
 
@@ -42,8 +43,6 @@ class Population {
      */
     void tick() throws InterruptedException {
         final long startTime = System.currentTimeMillis();
-        System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
-
         List<Individual> offspringIndividuals = new ArrayList<>();
 
         while (offspringIndividuals.size() != GeneticAlgorithm.populationSize) {
@@ -84,6 +83,7 @@ class Population {
         individuals.sort(Comparator.comparingDouble(Individual::getRank).thenComparing(Individual::getCrowdingDistance, Collections.reverseOrder()));
         individuals = individuals.subList(0, GeneticAlgorithm.populationSize);
 
+        System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
         System.out.println("New generation generated in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
     }
 
@@ -275,5 +275,9 @@ class Population {
 
     List<Individual> getParetoFront() {
         return paretoFront;
+    }
+
+    public List<Individual> getIndividuals() {
+        return individuals;
     }
 }

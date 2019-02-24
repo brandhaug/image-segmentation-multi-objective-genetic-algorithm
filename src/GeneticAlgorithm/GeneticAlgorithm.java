@@ -22,7 +22,7 @@ import java.util.List;
 public class GeneticAlgorithm {
 
     // Parameters
-    final static int populationSize = 20; // 20-100 dependent on problem
+    final static int populationSize = 10; // 20-100 dependent on problem
 //        private final double crossOverRate = 0.7; // 80%-95%
     final static double mutationRate = 0.05; // 0.5%-1%.
     final static int tournamentSize = 3; // Number of members in tournament selection
@@ -139,6 +139,23 @@ public class GeneticAlgorithm {
         }
 
         System.out.println("Neighbors added in " + ((System.currentTimeMillis() - startTime)) + "ms");
+    }
+
+    public double[][] getPopulationData() {
+        List<Individual> individuals = population.getIndividuals();
+        double[][] paretoData = new double[individuals.size()][3];
+
+        final int RANK = 0;
+        final int OVERALL_DEVIATION = 1;
+        final int CONNECTIVITY = 2;
+
+        for (int i = 0; i < individuals.size(); i++) {
+            paretoData[i][RANK] = individuals.get(i).getRank();
+            paretoData[i][OVERALL_DEVIATION] = individuals.get(i).getOverallDeviation();
+            paretoData[i][CONNECTIVITY] = individuals.get(i).getConnectivity();
+        }
+
+        return paretoData;
     }
 
     public void saveParetoOptimalIndividualsToFile(String fileName, Timestamp timestamp) throws IOException {
