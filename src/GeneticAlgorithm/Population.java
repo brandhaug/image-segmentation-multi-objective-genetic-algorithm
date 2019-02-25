@@ -78,7 +78,7 @@ class Population {
         final long startTime2 = System.currentTimeMillis();
         executorService.shutdown();
         executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        System.out.println("Segments in offspring calculated in " + ((System.currentTimeMillis() - startTime2) / 1000) + "s");
+        System.out.println("Segments in " + offspringIndividuals.size() + " offspring individuals calculated in " + ((System.currentTimeMillis() - startTime2) / 1000) + "s");
 
         individuals.addAll(offspringIndividuals);
 

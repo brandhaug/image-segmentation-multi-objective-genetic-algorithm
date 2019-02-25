@@ -28,9 +28,6 @@ public class GeneticAlgorithm {
     final static double mutationRate = 0.2; // 0.5%-1%.
     final static int tournamentSize = 3; // Number of members in tournament selection
 
-    final static double minInitialColorDistanceThreshold = 10.0; // Minimum Color Distance Threshold for initial population
-    final static double maxInitialColorDistanceThreshold = 20.0; // Maximum Color Distance Threshold for initial population
-
     final static int minSegments = 3;
     final static int maxSegments = 50;
 
