@@ -130,7 +130,7 @@ public class GuiController {
         canvas.setWidth(imageWidth);
         vboxRight.setLayoutX(canvasWidth);
         vboxRight.setPrefHeight(canvasHeight * 2);
-        vboxRight.setPrefWidth(vboxWidth);
+        vboxRight.setMaxWidth(vboxWidth);
         initializeScatterChart();
     }
 
