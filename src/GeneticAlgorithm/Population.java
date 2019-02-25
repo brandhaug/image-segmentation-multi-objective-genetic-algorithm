@@ -14,10 +14,11 @@ import java.util.concurrent.TimeUnit;
  * Represents all individuals
  */
 class Population {
-    private List<Individual> individuals = new ArrayList<>();
+    private List<Individual> individuals;
     private List<Individual> paretoFront;
 
     Population() throws InterruptedException {
+        individuals = new ArrayList<>();
         generateInitialPopulation();
     }
 
@@ -96,7 +97,7 @@ class Population {
         calculateCrowdingDistances();
 
         individuals.sort(Comparator.comparingDouble(Individual::getRank).thenComparing(Individual::getCrowdingDistance, Collections.reverseOrder()));
-        individuals = individuals.subList(0, GeneticAlgorithm.populationSize);
+        individuals = new ArrayList<>(individuals.subList(0, GeneticAlgorithm.populationSize));
 
         System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
         System.out.println("New generation generated in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");

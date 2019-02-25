@@ -10,7 +10,7 @@ import java.util.*;
 class Individual {
     // Lists
     private List<Integer> chromosome; // List of genes (pixels)
-    private List<Segment> segments = new ArrayList<>(); // List of segments (set of pixels)
+    private List<Segment> segments; // List of segments (set of pixels)
 
     // Objective functions
     private double overallDeviation; // Objective function 1
@@ -18,8 +18,8 @@ class Individual {
     private double fitness;
 
     // Non-dominated sorting
-    private int dominatedCount = 0; // n: number of solutions which dominates individual
-    private List<Individual> dominatedIndividuals = new ArrayList<>(); // S: set of solutions which individual dominates
+    private int dominatedCount; // n: number of solutions which dominates individual
+    private List<Individual> dominatedIndividuals; // S: set of solutions which individual dominates
     private int rank;
 
     // Dominated sorting
@@ -27,12 +27,18 @@ class Individual {
 
     Individual() {
         this.chromosome = new ArrayList<>(GeneticAlgorithm.initialChromosome);
+        segments = new ArrayList<>();
+        dominatedCount = 0;
+        dominatedIndividuals = new ArrayList<>();
         generateInitialIndividual();
         calculateObjectiveFunctions();
     }
 
     Individual(List<Integer> chromosome) {
         this.chromosome = new ArrayList<>(chromosome);
+        segments = new ArrayList<>();
+        dominatedCount = 0;
+        dominatedIndividuals = new ArrayList<>();
         calculateSegments();
         calculateObjectiveFunctions();
     }

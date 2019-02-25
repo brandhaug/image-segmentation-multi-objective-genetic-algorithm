@@ -11,13 +11,14 @@ import java.util.Map;
  * Represents a set of Pixels
  */
 class Segment {
-    private HashMap<Integer, Pixel> segmentPixels = new HashMap<>();
+    private HashMap<Integer, Pixel> segmentPixels;
     private Color averageColor;
     private Color centroidColor;
     private double overallDeviation;
     private double connectivity;
 
     Segment() {
+        segmentPixels = new HashMap<>();
     }
 
     void addSegmentPixel(Pixel pixel) {

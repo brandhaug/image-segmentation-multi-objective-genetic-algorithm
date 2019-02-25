@@ -185,7 +185,6 @@ public class GuiController {
     private void render(long startNanoTime, long currentNanoTime) {
             gc.clearRect(0, 0, canvasWidth, canvasHeight); // Clear canvas
             ga.render(gc); // Renders a optimal solution of Population in Genetic Algorithm
-            addToScartChart();
         updateGUI(startNanoTime, currentNanoTime);
     }
 
@@ -222,6 +221,7 @@ public class GuiController {
             startButton.setText("Start");
             saveButton.setVisible(true);
             imageSelector.setVisible(true);
+            addToScartChart();
         } else {
             startButton.setText("Pause");
             saveButton.setVisible(false);
