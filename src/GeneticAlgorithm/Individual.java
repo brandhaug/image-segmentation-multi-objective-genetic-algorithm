@@ -41,7 +41,7 @@ class Individual {
      * Baed on Minimum Spanning Tree (MST)
      */
     private void generateInitialIndividual() {
-        HashMap<Pixel, Segment> visitedPixels = new HashMap<>();
+        HashMap<Integer, Segment> visitedPixels = new HashMap<>();
         PriorityQueue<PixelNeighbor> possibleNeighbors = new PriorityQueue<>(); // Support array for all possible visits. Sorted by colorDistance
 
         int numberOfSegments = Utils.randomInt(GeneticAlgorithm.minSegments, GeneticAlgorithm.maxSegments);
@@ -53,13 +53,13 @@ class Individual {
             do {
                 int randomIndex = Utils.randomIndex(GeneticAlgorithm.pixels.size());
                 rootPixel = GeneticAlgorithm.pixels.get(randomIndex); // Random first best pixel
-            } while (visitedPixels.containsKey(rootPixel));
+            } while (visitedPixels.containsKey(rootPixel.getId()));
 
             Segment newSegment = new Segment();
             newSegment.addSegmentPixel(rootPixel);
             segments.add(newSegment);
 
-            visitedPixels.put(rootPixel, newSegment);
+            visitedPixels.put(rootPixel.getId(), newSegment);
             possibleNeighbors.addAll(rootPixel.getPixelNeighbors());
         }
 
@@ -68,11 +68,11 @@ class Individual {
             PixelNeighbor bestPixelNeighbor = possibleNeighbors.remove();
             Pixel bestNeighbor = bestPixelNeighbor.getNeighbor();
             Pixel bestPixel = bestPixelNeighbor.getPixel();
-            Segment segment = visitedPixels.get(bestPixel);
+            Segment segment = visitedPixels.get(bestPixel.getId());
 
-            if (!visitedPixels.containsKey(bestNeighbor)) {
+            if (!visitedPixels.containsKey(bestNeighbor.getId())) {
                 possibleNeighbors.addAll(bestNeighbor.getPixelNeighbors());
-                visitedPixels.put(bestNeighbor, segment);
+                visitedPixels.put(bestNeighbor.getId(), segment);
                 chromosome.set(bestNeighbor.getId(), bestPixel.getId());
                 segment.addSegmentPixel(bestNeighbor);
             }
