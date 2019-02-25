@@ -104,7 +104,7 @@ class Individual {
                     Pixel selectedNeighbor = pixelNeighbor.getNeighbor();
                     Pixel selectedPixel = pixelNeighbor.getPixel();
 
-                    if ((chromosome.get(selectedNeighbor.getId()) == selectedPixel.getId() || chromosome.get(selectedPixel.getId()) == selectedNeighbor.getId()) && !visitedPixels.containsKey(selectedNeighbor)) {
+                    if (!visitedPixels.containsKey(selectedNeighbor) && (chromosome.get(selectedNeighbor.getId()) == selectedPixel.getId() || chromosome.get(selectedPixel.getId()) == selectedNeighbor.getId())) {
                         Segment segment = visitedPixels.get(selectedPixel);
                         segment.addSegmentPixel(selectedNeighbor);
                         possiblePixelNeighbors.addAll(selectedNeighbor.getPixelNeighbors());

@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Controller for Genetic Algorithm
@@ -24,7 +27,7 @@ public class GeneticAlgorithm {
 
     // Parameters
     final static int populationSize = 50; // 20-100 dependent on problem
-//        private final double crossOverRate = 0.7; // 80%-95%
+    //        private final double crossOverRate = 0.7; // 80%-95%
     final static double mutationRate = 0.2; // 0.5%-1%.
     final static int tournamentSize = 3; // Number of members in tournament selection
 
@@ -63,25 +66,17 @@ public class GeneticAlgorithm {
     public void render(GraphicsContext gc) {
         final long startTime = System.currentTimeMillis();
 
-        List<Segment> segments = population.getAlphaSegments();
-//        int colorIndex = 0;
+        List<Segment> segments = population.getRandomParetoSegments();
         for (Segment segment : segments) {
             Color awtColor = segment.getAverageColor();
             javafx.scene.paint.Color fxColor = javafx.scene.paint.Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
             gc.setFill(fxColor);
-//            javafx.scene.paint.Color[] colors = {javafx.scene.paint.Color.RED, javafx.scene.paint.Color.ORANGE, javafx.scene.paint.Color.GOLD, javafx.scene.paint.Color.GREENYELLOW, javafx.scene.paint.Color.GREEN, javafx.scene.paint.Color.AQUA, javafx.scene.paint.Color.BLUE, javafx.scene.paint.Color.INDIGO, javafx.scene.paint.Color.VIOLET}; // Possible depot colors
-//            gc.setFill(colors[colorIndex]);
             for (Map.Entry<Integer, Pixel> entry : segment.getSegmentPixels().entrySet()) {
                 Pixel segmentPixel = entry.getValue();
                 gc.fillRect(segmentPixel.getX(), segmentPixel.getY(), 1, 1);
             }
-
-//            if (colorIndex == colors.length - 1) {
-//                colorIndex = 0;
-//            } else {
-//                colorIndex++;
-//            }
         }
+
         System.out.println("Pareto optimal solution rendered in " + ((System.currentTimeMillis() - startTime)) + "ms");
     }
 
@@ -163,54 +158,70 @@ public class GeneticAlgorithm {
         return paretoData;
     }
 
-    public void saveParetoOptimalIndividualsToFile(String fileName, Timestamp timestamp) throws IOException {
-        List<Individual> paretoFront = population.getParetoFront();
+    public void saveParetoOptimalIndividualsToFile(String fileName, Timestamp timestamp) throws InterruptedException {
+        List<Individual> individuals = population.getIndividuals();
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-        for (Individual individual : paretoFront) {
-            byte[] segmentLists = new byte[pixels.size()];
-            Arrays.fill(segmentLists, (byte) 255);
+        for (Individual individual : individuals) {
+            if (individual.getRank() == 1) {
+                executorService.execute(() -> {
+                    try {
+                        saveParetoOptimalIndividualToFile(individual, individuals.indexOf(individual), fileName, timestamp);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+        }
 
-            for (Segment segment : individual.getSegments()) {
-                for (Map.Entry<Integer, Pixel> entry : segment.getSegmentPixels().entrySet()) {
-                    Pixel segmentPixel = entry.getValue();
-                    boolean mostEast = true;
-                    boolean mostWest = true;
-                    boolean mostSouth = true;
-                    boolean mostNorth = true;
-                    boolean add = true;
+        executorService.shutdown();
+        executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+    }
 
-                    for (Map.Entry<Integer, Pixel> entry2 : segment.getSegmentPixels().entrySet()) {
-                        Pixel segmentPixelToCompare = entry2.getValue();
-                        if (segmentPixel != segmentPixelToCompare) { // Not same pixel
-                            if (segmentPixel.getY() == segmentPixelToCompare.getY()) { // Same y
-                                if (segmentPixel.getX() < segmentPixelToCompare.getX()) { // Pixel is west of pixelToCompare
-                                    mostEast = false;
-                                } else if (segmentPixel.getX() > segmentPixelToCompare.getX()) { // Pixel is east of pixelToCompare
-                                    mostWest = false;
-                                }
-                            } else if (segmentPixel.getX() == segmentPixelToCompare.getX()) { // Same x
-                                if (segmentPixel.getY() < segmentPixelToCompare.getY()) { // Pixel is north of pixelToCompare
-                                    mostSouth = false;
-                                } else if (segmentPixel.getY() > segmentPixelToCompare.getY()) { // Pixel is south of pixelToCompare
-                                    mostNorth = false;
-                                }
+    private void saveParetoOptimalIndividualToFile(Individual individual, int individualIndex, String fileName, Timestamp timestamp) throws IOException {
+        byte[] segmentLists = new byte[pixels.size()];
+        Arrays.fill(segmentLists, (byte) 255);
+
+        for (Segment segment : individual.getSegments()) {
+            for (Map.Entry<Integer, Pixel> entry : segment.getSegmentPixels().entrySet()) {
+                Pixel segmentPixel = entry.getValue();
+                boolean mostEast = true;
+                boolean mostWest = true;
+                boolean mostSouth = true;
+                boolean mostNorth = true;
+                boolean add = true;
+
+                for (Map.Entry<Integer, Pixel> entry2 : segment.getSegmentPixels().entrySet()) {
+                    Pixel segmentPixelToCompare = entry2.getValue();
+                    if (segmentPixel != segmentPixelToCompare) { // Not same pixel
+                        if (segmentPixel.getY() == segmentPixelToCompare.getY()) { // Same y
+                            if (segmentPixel.getX() < segmentPixelToCompare.getX()) { // Pixel is west of pixelToCompare
+                                mostEast = false;
+                            } else if (segmentPixel.getX() > segmentPixelToCompare.getX()) { // Pixel is east of pixelToCompare
+                                mostWest = false;
                             }
-
-                            if (!mostEast && !mostWest && !mostNorth && !mostSouth) {
-                                add = false;
-                                break;
+                        } else if (segmentPixel.getX() == segmentPixelToCompare.getX()) { // Same x
+                            if (segmentPixel.getY() < segmentPixelToCompare.getY()) { // Pixel is north of pixelToCompare
+                                mostSouth = false;
+                            } else if (segmentPixel.getY() > segmentPixelToCompare.getY()) { // Pixel is south of pixelToCompare
+                                mostNorth = false;
                             }
                         }
-                    } // PixelToCompare finished
 
-                    if (add) {
-                        segmentLists[segmentPixel.getId()] = 0;
+                        if (!mostEast && !mostWest && !mostNorth && !mostSouth) {
+                            add = false;
+                            break;
+                        }
                     }
-                } // Segment finished
-            } // Pareto individual finished
+                } // PixelToCompare finished
 
-            saveIndividualToImageFile(fileName, timestamp, paretoFront.indexOf(individual) + 1, segmentLists);
-        }
+                if (add) {
+                    segmentLists[segmentPixel.getId()] = 0;
+                }
+            } // Segment finished
+        } // Pareto individual finished
+
+        saveIndividualToImageFile(fileName, timestamp, individualIndex + 1, segmentLists);
     }
 
     private void saveIndividualToImageFile(String fileName, Timestamp timestamp, int individualIndex, byte[] segmentLists) throws IOException {

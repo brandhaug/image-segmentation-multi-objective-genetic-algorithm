@@ -250,7 +250,7 @@ public class GuiController {
 
         try {
             ga.saveParetoOptimalIndividualsToFile(fileNameNoExtension, timestamp);
-        } catch (IOException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
         System.out.println("Pareto optimal solutions saved in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");

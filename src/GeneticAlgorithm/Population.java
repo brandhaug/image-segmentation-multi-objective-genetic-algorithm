@@ -50,7 +50,9 @@ class Population {
         List<Individual> offspringIndividuals = new ArrayList<>();
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-        while (offspringIndividuals.size() != GeneticAlgorithm.populationSize) {
+
+        int loops = GeneticAlgorithm.populationSize / 2; // Because crossover produces 2 children
+        for (int i = 0; i < loops; i++) {
             // Selection
             Individual parent = tournament();
             Individual otherParent = tournament();
@@ -77,8 +79,16 @@ class Population {
 
         final long startTime2 = System.currentTimeMillis();
         executorService.shutdown();
-        executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
         System.out.println("Segments in " + offspringIndividuals.size() + " offspring individuals calculated in " + ((System.currentTimeMillis() - startTime2) / 1000) + "s");
+
+        int averageSegmentsSize = 0;
+        for (Individual offspringIndividual: offspringIndividuals) {
+            averageSegmentsSize += offspringIndividual.getSegments().size();
+        }
+
+        averageSegmentsSize = averageSegmentsSize / offspringIndividuals.size();
+        System.out.println("Average segment size in offspring: " + averageSegmentsSize);
 
         individuals.addAll(offspringIndividuals);
 
@@ -97,7 +107,6 @@ class Population {
      * Based on page 3 in NSGA-II paper by Kalyanmoy Deb, Amrit Pratap, Sameer Agarwal, and T. Meyarivan
      */
     private void fastNonDominatedSort() {
-        final long startTime = System.currentTimeMillis();
         List<Individual> front = new ArrayList<>(); // F
 
         int rank = 1;
@@ -138,13 +147,9 @@ class Population {
             front = newFront;
             rank++;
         }
-
-        System.out.println("Non dominated sorting finished after " + ((System.currentTimeMillis() - startTime)) + "ms");
     }
 
     private void calculateCrowdingDistances() {
-        final long startTime = System.currentTimeMillis();
-
         // Reset distances
         for (Individual individual : paretoFront) {
             individual.setCrowdingDistance(0);
@@ -152,8 +157,8 @@ class Population {
 
         // Objective function 1: Overall deviation
         individuals.sort(Comparator.comparingDouble(Individual::getOverallDeviation));
-        double minOverallDeviation = individuals.get(individuals.size() - 1).getOverallDeviation();
-        double maxOverallDeviation = individuals.get(0).getOverallDeviation();
+        double minOverallDeviation = individuals.get(0).getOverallDeviation();
+        double maxOverallDeviation = individuals.get(individuals.size() - 1).getOverallDeviation();
         individuals.get(0).setCrowdingDistance(Double.POSITIVE_INFINITY);
         for (int k = 1; k < paretoFront.size() - 1; k++) {
             individuals.get(k).setCrowdingDistance(individuals.get(k).getCrowdingDistance() + (individuals.get(k + 1).getOverallDeviation() - individuals.get(k - 1).getOverallDeviation()) / (maxOverallDeviation - minOverallDeviation));
@@ -161,14 +166,12 @@ class Population {
 
         // Objective function 2: Connectivity
         individuals.sort(Comparator.comparingDouble(Individual::getConnectivity));
-        double minConnectivity = individuals.get(individuals.size() - 1).getConnectivity();
-        double maxConnectivity = individuals.get(0).getConnectivity();
+        double minConnectivity = individuals.get(0).getConnectivity();
+        double maxConnectivity = individuals.get(individuals.size() - 1).getConnectivity();
         individuals.get(0).setCrowdingDistance(Double.POSITIVE_INFINITY);
         for (int k = 1; k < paretoFront.size() - 1; k++) {
             individuals.get(k).setCrowdingDistance(individuals.get(k).getCrowdingDistance() + (individuals.get(k + 1).getConnectivity() - individuals.get(k - 1).getConnectivity()) / (maxConnectivity - minConnectivity));
         }
-
-        System.out.println("Crowding distances calculated in " + ((System.currentTimeMillis() - startTime)) + "ms");
     }
 
     private Individual tournament() {
@@ -270,15 +273,16 @@ class Population {
         Collections.swap(chromosome, indexA, indexB);
     }
 
-    List<Segment> getAlphaSegments() {
-        return individuals.get(0).getSegments();
+    List<Segment> getRandomParetoSegments() {
+        int randomIndex;
+        do {
+            randomIndex = Utils.randomIndex(individuals.size());
+        } while (individuals.get(randomIndex).getRank() != 1);
+
+        return individuals.get(randomIndex).getSegments();
     }
 
-    List<Individual> getParetoFront() {
-        return paretoFront;
-    }
-
-    public List<Individual> getIndividuals() {
+    List<Individual> getIndividuals() {
         return individuals;
     }
 }
