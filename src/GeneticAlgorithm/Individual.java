@@ -7,7 +7,7 @@ import java.util.*;
 /**
  * Represents one chromosome
  */
-class Individual {
+class Individual extends Thread {
     // Lists
     private List<Integer> chromosome; // List of genes (pixels)
     private List<Segment> segments = new ArrayList<>(); // List of segments (set of pixels)
@@ -22,18 +22,31 @@ class Individual {
     private List<Individual> dominatedIndividuals = new ArrayList<>(); // S: set of solutions which individual dominates
     private int rank;
 
-    // Dominated sorting
     private double crowdingDistance;
+
+    private boolean initialize;
+
+    private double initialColorDistanceThreshold;
 
     Individual() {
         this.chromosome = new ArrayList<>(GeneticAlgorithm.initialChromosome);
-        generateInitialIndividual();
-        calculateObjectiveFunctions();
+        this.initialize = true;
+        this.initialColorDistanceThreshold = Utils.randomDouble(GeneticAlgorithm.minInitialColorDistanceThreshold, GeneticAlgorithm.maxInitialColorDistanceThreshold);
     }
 
     Individual(List<Integer> chromosome) {
         this.chromosome = new ArrayList<>(chromosome);
-        calculateSegments();
+        this.initialize = false;
+    }
+
+    @Override
+    public void run() {
+        if (initialize) {
+            generateInitialIndividual();
+        } else {
+            calculateSegments();
+        }
+
         calculateObjectiveFunctions();
     }
 
