@@ -4,14 +4,14 @@ import Main.GuiController;
 import Utils.Utils;
 
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents a set of Pixels
  */
 class Segment {
-    private List<Pixel> segmentPixels = new ArrayList<>();
+    private HashMap<Integer, Pixel> segmentPixels = new HashMap<>();
     private Color averageColor;
     private Color centroidColor;
     private double overallDeviation;
@@ -21,10 +21,10 @@ class Segment {
     }
 
     void addSegmentPixel(Pixel pixel) {
-        segmentPixels.add(pixel);
+        segmentPixels.put(pixel.getId(), pixel);
     }
 
-    List<Pixel> getSegmentPixels() {
+    HashMap<Integer, Pixel> getSegmentPixels() {
         return segmentPixels;
     }
 
@@ -36,10 +36,14 @@ class Segment {
         calculateCentroidCoordinate();
 
         connectivity = 0.0;
-        for (Pixel segmentPixel : segmentPixels) {
-            for (int j = 0; j < segmentPixel.getPixelNeighbors().size(); j++) {
 
-                if (segmentPixel.getPixelNeighbors().get(j).getNeighbor().getSegment() != this) {
+        for (Map.Entry<Integer, Pixel> entry : segmentPixels.entrySet()) {
+            Pixel segmentPixel = entry.getValue();
+
+            for (int j = 0; j < segmentPixel.getPixelNeighbors().size(); j++) {
+                Pixel neighbor = segmentPixel.getPixelNeighbors().get(j).getNeighbor();
+
+                if (!segmentPixels.containsKey(neighbor.getId())) {
                     connectivity += (1 / (double) (j + 1));
                 }
             }
@@ -69,7 +73,9 @@ class Segment {
         int averageGreen = 0;
         int averageBlue = 0;
 
-        for (Pixel segmentPixel : segmentPixels) {
+        for (Map.Entry<Integer, Pixel> entry : segmentPixels.entrySet()) {
+            Pixel segmentPixel = entry.getValue();
+
             averageX += segmentPixel.getX();
             averageY += segmentPixel.getY();
 
@@ -104,9 +110,5 @@ class Segment {
 
     Color getAverageColor() {
         return averageColor;
-    }
-
-    int getSegmentSize() {
-        return segmentPixels.size();
     }
 }

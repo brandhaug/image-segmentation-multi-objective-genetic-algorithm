@@ -15,6 +15,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controller for Genetic Algorithm
@@ -73,8 +74,9 @@ public class GeneticAlgorithm {
             gc.setFill(fxColor);
 //            javafx.scene.paint.Color[] colors = {javafx.scene.paint.Color.RED, javafx.scene.paint.Color.ORANGE, javafx.scene.paint.Color.GOLD, javafx.scene.paint.Color.GREENYELLOW, javafx.scene.paint.Color.GREEN, javafx.scene.paint.Color.AQUA, javafx.scene.paint.Color.BLUE, javafx.scene.paint.Color.INDIGO, javafx.scene.paint.Color.VIOLET}; // Possible depot colors
 //            gc.setFill(colors[colorIndex]);
-            for (Pixel pixel : segment.getSegmentPixels()) {
-                gc.fillRect(pixel.getX(), pixel.getY(), 1, 1);
+            for (Map.Entry<Integer, Pixel> entry : segment.getSegmentPixels().entrySet()) {
+                Pixel segmentPixel = entry.getValue();
+                gc.fillRect(segmentPixel.getX(), segmentPixel.getY(), 1, 1);
             }
 
 //            if (colorIndex == colors.length - 1) {
@@ -172,25 +174,27 @@ public class GeneticAlgorithm {
             Arrays.fill(segmentLists, (byte) 255);
 
             for (Segment segment : individual.getSegments()) {
-                for (Pixel pixel : segment.getSegmentPixels()) {
+                for (Map.Entry<Integer, Pixel> entry : segment.getSegmentPixels().entrySet()) {
+                    Pixel segmentPixel = entry.getValue();
                     boolean mostEast = true;
                     boolean mostWest = true;
                     boolean mostSouth = true;
                     boolean mostNorth = true;
                     boolean add = true;
 
-                    for (Pixel pixelToCompare : segment.getSegmentPixels()) {
-                        if (pixel != pixelToCompare) { // Not same pixel
-                            if (pixel.getY() == pixelToCompare.getY()) { // Same y
-                                if (pixel.getX() < pixelToCompare.getX()) { // Pixel is west of pixelToCompare
+                    for (Map.Entry<Integer, Pixel> entry2 : segment.getSegmentPixels().entrySet()) {
+                        Pixel segmentPixelToCompare = entry2.getValue();
+                        if (segmentPixel != segmentPixelToCompare) { // Not same pixel
+                            if (segmentPixel.getY() == segmentPixelToCompare.getY()) { // Same y
+                                if (segmentPixel.getX() < segmentPixelToCompare.getX()) { // Pixel is west of pixelToCompare
                                     mostEast = false;
-                                } else if (pixel.getX() > pixelToCompare.getX()) { // Pixel is east of pixelToCompare
+                                } else if (segmentPixel.getX() > segmentPixelToCompare.getX()) { // Pixel is east of pixelToCompare
                                     mostWest = false;
                                 }
-                            } else if (pixel.getX() == pixelToCompare.getX()) { // Same x
-                                if (pixel.getY() < pixelToCompare.getY()) { // Pixel is north of pixelToCompare
+                            } else if (segmentPixel.getX() == segmentPixelToCompare.getX()) { // Same x
+                                if (segmentPixel.getY() < segmentPixelToCompare.getY()) { // Pixel is north of pixelToCompare
                                     mostSouth = false;
-                                } else if (pixel.getY() > pixelToCompare.getY()) { // Pixel is south of pixelToCompare
+                                } else if (segmentPixel.getY() > segmentPixelToCompare.getY()) { // Pixel is south of pixelToCompare
                                     mostNorth = false;
                                 }
                             }
@@ -203,7 +207,7 @@ public class GeneticAlgorithm {
                     } // PixelToCompare finished
 
                     if (add) {
-                        segmentLists[pixel.getId()] = 0;
+                        segmentLists[segmentPixel.getId()] = 0;
                     }
                 } // Segment finished
             } // Pareto individual finished
