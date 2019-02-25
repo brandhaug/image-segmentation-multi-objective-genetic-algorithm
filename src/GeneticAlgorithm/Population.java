@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Represents all individuals
@@ -21,15 +24,16 @@ class Population {
     private void generateInitialPopulation() throws InterruptedException {
         System.out.println("Generating Initial Population");
         final long startTime = System.currentTimeMillis();
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         for (int i = 0; i < GeneticAlgorithm.populationSize; i++) {
-            Individual individual = new Individual();
-            individual.start(); // Start thread by calling run method
-            individuals.add(individual);
+            executorService.execute(() -> {
+                Individual individual = new Individual();
+                individuals.add(individual);
+            });
         }
 
-        for (Individual individual : individuals) {
-            individual.join(); // Wait for thread to terminate
-        }
+        executorService.shutdown();
+        executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
         fastNonDominatedSort();
         calculateCrowdingDistances();
@@ -44,6 +48,7 @@ class Population {
     void tick() throws InterruptedException {
         final long startTime = System.currentTimeMillis();
         List<Individual> offspringIndividuals = new ArrayList<>();
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
         while (offspringIndividuals.size() != GeneticAlgorithm.populationSize) {
             // Selection
@@ -62,17 +67,17 @@ class Population {
                     }
 
                     // Add offspring
-                    Individual newIndividual = new Individual(newChromosome);
-                    newIndividual.start();
-                    offspringIndividuals.add(newIndividual);
+                    executorService.execute(() -> {
+                        Individual newIndividual = new Individual(newChromosome);
+                        offspringIndividuals.add(newIndividual);
+                    });
                 }
             }
         }
 
         final long startTime2 = System.currentTimeMillis();
-        for (Individual newIndividual : offspringIndividuals) {
-            newIndividual.join(); // Wait for thread to terminate
-        }
+        executorService.shutdown();
+        executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         System.out.println("Segments in offspring calculated in " + ((System.currentTimeMillis() - startTime2) / 1000) + "s");
 
         individuals.addAll(offspringIndividuals);
