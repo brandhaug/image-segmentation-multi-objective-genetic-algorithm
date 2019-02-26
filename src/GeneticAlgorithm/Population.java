@@ -232,10 +232,6 @@ class Population {
     }
 
     private List<List<Integer>> crossOver(Individual parent, Individual otherParent, int splits) {
-        if (parent.getChromosome().size() != otherParent.getChromosome().size()) {
-            throw new Error("Chromosomes are different size");
-        }
-
         List<List<Integer>> newChromosomes = new ArrayList<>();
         int[] partitionIndices = Utils.generatePartitionIndices(parent.getChromosome().size(), splits);
         List<List<Integer>> partsFromParent = Utils.splitRoute(parent.getChromosome(), partitionIndices, splits);
@@ -243,10 +239,6 @@ class Population {
 
         List<Integer> newChromosome = new ArrayList<>();
         List<Integer> newChromosome2 = new ArrayList<>();
-
-        if (partsFromParent.size() != splits) {
-            throw new Error("Legg til +1");
-        }
 
         for (int i = 0; i < splits; i++) {
             if (i % 2 == 0) {
@@ -258,11 +250,7 @@ class Population {
             }
         }
 
-        if (newChromosome.size() != parent.getChromosome().size()) {
-            throw new Error("Chromosomes are different size");
-        }
-
-        if (newChromosome.size() != newChromosome2.size()) {
+        if (newChromosome.size() != parent.getChromosome().size() || newChromosome.size() != newChromosome2.size()) {
             throw new Error("Chromosomes are different size");
         }
 
