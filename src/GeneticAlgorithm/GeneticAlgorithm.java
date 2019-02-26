@@ -15,7 +15,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -50,12 +49,12 @@ public class GeneticAlgorithm {
         pixels = new ArrayList<>();
         initialChromosome = new ArrayList<>();
         Pixel.resetIdentification(); // Resets IDs in pixels, so it can be used for list retrieving
-        pixelArr = generateGenes(colorArr);
+        Pixel[][] pixelArr = generateGenes(colorArr);
+        findAndAddAllPixelNeighbors(pixelArr);
     }
 
     public void tick() throws InterruptedException {
         if (generation == 0) {
-            findAndAddAllPixelNeighbors(pixelArr);
             population = new Population();
         } else {
             population.tick();
@@ -71,8 +70,7 @@ public class GeneticAlgorithm {
             Color awtColor = segment.getAverageColor();
             javafx.scene.paint.Color fxColor = javafx.scene.paint.Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
             gc.setFill(fxColor);
-            for (Map.Entry<Integer, Pixel> entry : segment.getSegmentPixels().entrySet()) {
-                Pixel segmentPixel = entry.getValue();
+            for (Pixel segmentPixel : segment.getSegmentPixels().values()) {
                 gc.fillRect(segmentPixel.getX(), segmentPixel.getY(), 1, 1);
             }
         }
@@ -183,16 +181,14 @@ public class GeneticAlgorithm {
         Arrays.fill(segmentLists, (byte) 255);
 
         for (Segment segment : individual.getSegments()) {
-            for (Map.Entry<Integer, Pixel> entry : segment.getSegmentPixels().entrySet()) {
-                Pixel segmentPixel = entry.getValue();
+            for (Pixel segmentPixel : segment.getSegmentPixels().values()) {
                 boolean mostEast = true;
                 boolean mostWest = true;
                 boolean mostSouth = true;
                 boolean mostNorth = true;
                 boolean add = true;
 
-                for (Map.Entry<Integer, Pixel> entry2 : segment.getSegmentPixels().entrySet()) {
-                    Pixel segmentPixelToCompare = entry2.getValue();
+                for (Pixel segmentPixelToCompare : segment.getSegmentPixels().values()) {
                     if (segmentPixel != segmentPixelToCompare) { // Not same pixel
                         if (segmentPixel.getY() == segmentPixelToCompare.getY()) { // Same y
                             if (segmentPixel.getX() < segmentPixelToCompare.getX()) { // Pixel is west of pixelToCompare

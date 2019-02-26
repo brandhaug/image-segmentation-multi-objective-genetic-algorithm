@@ -18,8 +18,6 @@ class Individual {
     private double fitness;
 
     // Non-dominated sorting
-    private int dominatedCount; // n: number of solutions which dominates individual
-    private List<Individual> dominatedIndividuals; // S: set of solutions which individual dominates
     private int rank;
 
     // Dominated sorting
@@ -28,8 +26,6 @@ class Individual {
     Individual() {
         this.chromosome = new ArrayList<>(GeneticAlgorithm.initialChromosome);
         segments = new ArrayList<>();
-        dominatedCount = 0;
-        dominatedIndividuals = new ArrayList<>();
         generateInitialIndividual();
         calculateObjectiveFunctions();
     }
@@ -37,8 +33,6 @@ class Individual {
     Individual(List<Integer> chromosome) {
         this.chromosome = new ArrayList<>(chromosome);
         segments = new ArrayList<>();
-        dominatedCount = 0;
-        dominatedIndividuals = new ArrayList<>();
         calculateSegments();
         calculateObjectiveFunctions();
     }
@@ -154,22 +148,6 @@ class Individual {
 
     double getFitness() {
         return fitness;
-    }
-
-    int getDominatedCount() {
-        return dominatedCount;
-    }
-
-    List<Individual> getDominatedIndividuals() {
-        return dominatedIndividuals;
-    }
-
-    void addToDominatedIndividuals(Individual individual) {
-        dominatedIndividuals.add(individual);
-    }
-
-    void setDominatedCount(int dominatedCount) {
-        this.dominatedCount = dominatedCount;
     }
 
     void setRank(int rank) {

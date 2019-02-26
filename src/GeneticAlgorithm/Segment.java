@@ -5,7 +5,6 @@ import Utils.Utils;
 
 import java.awt.Color;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Represents a set of Pixels
@@ -38,9 +37,7 @@ class Segment {
 
         connectivity = 0.0;
 
-        for (Map.Entry<Integer, Pixel> entry : segmentPixels.entrySet()) {
-            Pixel segmentPixel = entry.getValue();
-
+        for (Pixel segmentPixel : segmentPixels.values()) {
             for (int j = 0; j < segmentPixel.getPixelNeighbors().size(); j++) {
                 Pixel neighbor = segmentPixel.getPixelNeighbors().get(j).getNeighbor();
 
@@ -74,9 +71,7 @@ class Segment {
         int averageGreen = 0;
         int averageBlue = 0;
 
-        for (Map.Entry<Integer, Pixel> entry : segmentPixels.entrySet()) {
-            Pixel segmentPixel = entry.getValue();
-
+        for (Pixel segmentPixel : segmentPixels.values()) {
             averageX += segmentPixel.getX();
             averageY += segmentPixel.getY();
 

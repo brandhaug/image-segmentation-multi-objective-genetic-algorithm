@@ -59,10 +59,10 @@ class Population {
             Individual otherParent = tournament();
 
             // Crossover
-            List<List<Integer>> newChromosomes = crossOver(parent, otherParent, GeneticAlgorithm.numberOfSplits);
+            int[][] newChromosomes = crossOver(parent, otherParent, GeneticAlgorithm.numberOfSplits);
 
             // Mutation
-            for (List<Integer> newChromosome : newChromosomes) {
+            for (int[] newChromosome : newChromosomes) {
                 if (offspringIndividuals.size() != GeneticAlgorithm.populationSize) {
                     double random = Utils.randomDouble();
                     if (random < GeneticAlgorithm.mutationRate) {
@@ -84,7 +84,7 @@ class Population {
         System.out.println("Segments in " + offspringIndividuals.size() + " offspring individuals calculated in " + ((System.currentTimeMillis() - startTime2) / 1000) + "s");
 
         int averageSegmentsSize = 0;
-        for (Individual offspringIndividual: offspringIndividuals) {
+        for (Individual offspringIndividual : offspringIndividuals) {
             averageSegmentsSize += offspringIndividual.getSegments().size();
         }
 
@@ -109,21 +109,28 @@ class Population {
      */
     private void fastNonDominatedSort() {
         List<Individual> front = new ArrayList<>(); // F
+        HashMap<Individual, Integer> dominatedCounts = new HashMap<>();
+        HashMap<Individual, List<Individual>> dominatedIndividuals = new HashMap<>();
 
         int rank = 1;
 
         for (Individual individual : individuals) { // p in P
+            dominatedIndividuals.put(individual, new ArrayList<>());
+            dominatedCounts.put(individual, 0);
+
             for (Individual individualToCompare : individuals) { // q in P
                 if (individual != individualToCompare) {
                     if (individual.dominates(individualToCompare)) { // Add to the set of solutions dominated (S)
-                        individual.addToDominatedIndividuals(individualToCompare);
+                        List<Individual> dominates = dominatedIndividuals.get(individual);
+                        dominates.add(individualToCompare);
                     } else if (individualToCompare.dominates(individual)) {
-                        individual.setDominatedCount(individual.getDominatedCount() + 1); // Increment the domination counter (n)
+                        int dominatedCount = dominatedCounts.get(individual) + 1;
+                        dominatedCounts.put(individual, dominatedCount);
                     }
                 }
             }
 
-            if (individual.getDominatedCount() == 0) {
+            if (dominatedCounts.get(individual) == 0) {
                 individual.setRank(rank);
                 front.add(individual);
             }
@@ -135,10 +142,11 @@ class Population {
         while (front.size() != 0) {
             List<Individual> newFront = new ArrayList<>(); // Q
             for (Individual individual : front) { // p in F
-                for (Individual dominatedIndividual : individual.getDominatedIndividuals()) { // q in S
-                    dominatedIndividual.setDominatedCount(dominatedIndividual.getDominatedCount() - 1);
+                for (Individual dominatedIndividual : dominatedIndividuals.get(individual)) { // q in S
+                    int dominatedCount = dominatedCounts.get(individual) - 1;
+                    dominatedCounts.put(dominatedIndividual, dominatedCount);
 
-                    if (dominatedIndividual.getDominatedCount() == 0) {
+                    if (dominatedCount == 0) {
                         dominatedIndividual.setRank(rank);
                         newFront.add(dominatedIndividual);
                     }
