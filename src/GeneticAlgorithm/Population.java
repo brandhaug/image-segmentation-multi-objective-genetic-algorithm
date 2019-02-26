@@ -94,7 +94,7 @@ class Population {
         calculateCrowdingDistances();
 
         individuals.sort(Comparator.comparingDouble(Individual::getRank).thenComparing(Individual::getCrowdingDistance, Collections.reverseOrder()));
-        individuals = new ArrayList<>(individuals.subList(0, GeneticAlgorithm.populationSize));
+        individuals = individuals.subList(0, GeneticAlgorithm.populationSize);
 
         System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
         System.out.println("New generation generated in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");

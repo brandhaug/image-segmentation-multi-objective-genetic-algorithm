@@ -26,7 +26,6 @@ public class GeneticAlgorithm {
 
     // Parameters
     final static int populationSize = 50; // 20-100 dependent on problem
-    //        private final double crossOverRate = 0.7; // 80%-95%
     final static double mutationRate = 0.2; // 0.5%-1%.
     final static int tournamentSize = 3; // Number of members in tournament selection
 
@@ -40,8 +39,6 @@ public class GeneticAlgorithm {
     // Initial lists (read only)
     static List<Pixel> pixels;
     static List<Integer> initialChromosome; // All pixels pointing to self as default
-
-    private Pixel[][] pixelArr;
 
     private int generation = 0;
 
