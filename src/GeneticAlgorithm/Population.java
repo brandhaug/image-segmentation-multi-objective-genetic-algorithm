@@ -2,10 +2,7 @@ package GeneticAlgorithm;
 
 import Utils.Utils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -59,10 +56,10 @@ class Population {
             Individual otherParent = tournament();
 
             // Crossover
-            int[][] newChromosomes = crossOver(parent, otherParent, GeneticAlgorithm.numberOfSplits);
+            List<List<Integer>> newChromosomes = crossOver(parent, otherParent, GeneticAlgorithm.numberOfSplits);
 
             // Mutation
-            for (int[] newChromosome : newChromosomes) {
+            for (List<Integer> newChromosome : newChromosomes) {
                 if (offspringIndividuals.size() != GeneticAlgorithm.populationSize) {
                     double random = Utils.randomDouble();
                     if (random < GeneticAlgorithm.mutationRate) {
