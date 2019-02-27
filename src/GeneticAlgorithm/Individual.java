@@ -2,7 +2,13 @@ package GeneticAlgorithm;
 
 import Utils.Utils;
 
-import java.util.*;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.LinkedList;
 
 /**
  * Represents one chromosome
@@ -41,7 +47,7 @@ class Individual {
      * Baed on Minimum Spanning Tree (MST)
      */
     private void generateInitialIndividual() {
-        HashMap<Integer, Segment> visitedPixels = new HashMap<>();
+        Map<Integer, Segment> visitedPixels = new HashMap<>();
         PriorityQueue<PixelNeighbor> possibleNeighbors = new PriorityQueue<>(); // Support array for all possible visits. Sorted by colorDistance
 
         int numberOfSegments = Utils.randomInt(GeneticAlgorithm.minSegments, GeneticAlgorithm.maxSegments);
@@ -83,7 +89,7 @@ class Individual {
      * Creates segments based on chromosome
      */
     private void calculateSegments() {
-        HashMap<Pixel, Segment> visitedPixels = new HashMap<>();
+        Map<Pixel, Segment> visitedPixels = new HashMap<>();
         Queue<PixelNeighbor> possiblePixelNeighbors = new LinkedList<>();
 
         for (int pixelId = 0; pixelId < chromosome.size(); pixelId++) {

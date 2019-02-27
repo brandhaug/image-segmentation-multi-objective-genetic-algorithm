@@ -2,6 +2,7 @@ package Main;
 
 import GeneticAlgorithm.GeneticAlgorithm;
 import Utils.ImageUtils;
+
 import javafx.animation.AnimationTimer;
 import javafx.collections.FXCollections;
 import javafx.embed.swing.SwingFXUtils;
@@ -24,8 +25,10 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.*;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects;
 
 public class GuiController {
 
@@ -183,8 +186,8 @@ public class GuiController {
     }
 
     private void render(long startNanoTime, long currentNanoTime) {
-            gc.clearRect(0, 0, canvasWidth, canvasHeight); // Clear canvas
-            ga.render(gc); // Renders a optimal solution of Population in Genetic Algorithm
+        gc.clearRect(0, 0, canvasWidth, canvasHeight); // Clear canvas
+        ga.render(gc); // Renders a optimal solution of Population in Genetic Algorithm
         updateGUI(startNanoTime, currentNanoTime);
     }
 

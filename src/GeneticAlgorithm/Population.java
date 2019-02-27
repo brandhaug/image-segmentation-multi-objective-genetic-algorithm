@@ -2,7 +2,12 @@ package GeneticAlgorithm;
 
 import Utils.Utils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -106,8 +111,8 @@ class Population {
      */
     private void fastNonDominatedSort() {
         List<Individual> front = new ArrayList<>(); // F
-        HashMap<Individual, Integer> dominatedCounts = new HashMap<>();
-        HashMap<Individual, List<Individual>> dominatedIndividuals = new HashMap<>();
+        Map<Individual, Integer> dominatedCounts = new HashMap<>();
+        Map<Individual, List<Individual>> dominatedIndividuals = new HashMap<>();
 
         int rank = 1;
 

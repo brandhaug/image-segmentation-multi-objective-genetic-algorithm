@@ -5,12 +5,13 @@ import Utils.Utils;
 
 import java.awt.Color;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents a set of Pixels
  */
 class Segment {
-    private HashMap<Integer, Pixel> segmentPixels;
+    private Map<Integer, Pixel> segmentPixels;
     private Color averageColor;
     private Color centroidColor;
     private double overallDeviation;
@@ -24,7 +25,7 @@ class Segment {
         segmentPixels.put(pixel.getId(), pixel);
     }
 
-    HashMap<Integer, Pixel> getSegmentPixels() {
+    Map<Integer, Pixel> getSegmentPixels() {
         return segmentPixels;
     }
 
