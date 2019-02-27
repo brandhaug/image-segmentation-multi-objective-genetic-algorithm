@@ -7,11 +7,13 @@ class PixelNeighbor implements Comparable<PixelNeighbor> {
     private Pixel pixel;
     private Pixel neighbor;
     private double colorDistance; // Euclidean Color Distance
+    private Direction direction;
 
-    PixelNeighbor(Pixel pixel, Pixel neighbor, double colorDistance) {
+    PixelNeighbor(Pixel pixel, Pixel neighbor, double colorDistance, Direction direction) {
         this.pixel = pixel;
         this.neighbor = neighbor;
         this.colorDistance = colorDistance;
+        this.direction = direction;
     }
 
     @Override
@@ -34,5 +36,9 @@ class PixelNeighbor implements Comparable<PixelNeighbor> {
 
     double getColorDistance() {
         return colorDistance;
+    }
+
+    Direction getDirection() {
+        return direction;
     }
 }

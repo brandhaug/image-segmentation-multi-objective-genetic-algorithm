@@ -38,6 +38,10 @@ public class GuiController {
     @FXML
     private Canvas canvas;
     @FXML
+    private Canvas canvas2;
+    @FXML
+    private Canvas canvas3;
+    @FXML
     private VBox vboxRight;
     @FXML
     private VBox vboxLeft;
@@ -65,18 +69,16 @@ public class GuiController {
     private XYChart.Series paretoSeries;
     private XYChart.Series restOfPopulationSeries;
 
-    // Canvas
-    private int canvasWidth;
-    private int canvasHeight;
-
     private final int vboxWidth = 200;
 
     public static int imageWidth;
     public static int imageHeight;
 
     private GraphicsContext gc; // Used to draw on canvas
+    private GraphicsContext gc2; // Used to draw on canvas
+    private GraphicsContext gc3; // Used to draw on canvas
 
-    private BufferedImage bufferedImage;
+    private WritableImage image;
 
     // States
     private boolean paused = true;
@@ -95,12 +97,15 @@ public class GuiController {
 
         try {
             final long startTime = System.currentTimeMillis();
-            bufferedImage = imageUtils.readImage(fileName);
+            BufferedImage bufferedImage = imageUtils.readImage(fileName);
+            image = SwingFXUtils.toFXImage(bufferedImage, null);
             imageWidth = bufferedImage.getWidth();
             imageHeight = bufferedImage.getHeight();
             initializeGUI();
             Color[][] colorArr = imageUtils.parseBufferedImageTo2DArray(bufferedImage);
             gc = canvas.getGraphicsContext2D();
+            gc2 = canvas2.getGraphicsContext2D();
+            gc3 = canvas3.getGraphicsContext2D();
             renderImage();
             System.out.println("Image read and rendered in " + ((System.currentTimeMillis() - startTime)) + "ms");
             ga = new GeneticAlgorithm(colorArr);
@@ -127,12 +132,14 @@ public class GuiController {
         startButton.setVisible(true);
         startButton.setText("Start");
         imageSelector.setVisible(true);
-        canvasHeight = imageHeight;
-        canvasWidth = imageWidth;
         canvas.setHeight(imageHeight);
         canvas.setWidth(imageWidth);
-        vboxRight.setLayoutX(canvasWidth);
-        vboxRight.setPrefHeight(canvasHeight * 2);
+        canvas2.setHeight(imageHeight);
+        canvas2.setWidth(imageWidth);
+        canvas3.setHeight(imageHeight);
+        canvas3.setWidth(imageWidth);
+        vboxRight.setLayoutX(imageWidth * 2);
+        vboxRight.setPrefHeight(imageHeight * 2);
         vboxRight.setMaxWidth(vboxWidth);
         initializeScatterChart();
     }
@@ -161,8 +168,8 @@ public class GuiController {
     }
 
     private void initializeScatterChart() {
-        vboxLeft.setPrefHeight(canvasHeight * 2);
-        vboxRight.setPrefWidth(canvasWidth);
+        vboxLeft.setPrefHeight(imageHeight * 2);
+        vboxRight.setPrefWidth(imageWidth);
         xAxis.setLabel("Overall Deviation");
         yAxis.setLabel("Connectivity");
         paretoSeries = new XYChart.Series();
@@ -172,8 +179,8 @@ public class GuiController {
     }
 
     private void renderImage() {
-        WritableImage image = SwingFXUtils.toFXImage(this.bufferedImage, null);
         gc.drawImage(image, 0, 0);
+        gc2.drawImage(image, 0, 0);
     }
 
     private void tick() {
@@ -186,8 +193,11 @@ public class GuiController {
     }
 
     private void render(long startNanoTime, long currentNanoTime) {
-        gc.clearRect(0, 0, canvasWidth, canvasHeight); // Clear canvas
-        ga.render(gc); // Renders a optimal solution of Population in Genetic Algorithm
+        gc.clearRect(0, 0, imageWidth, imageHeight); // Clear canvas
+        gc2.clearRect(0, 0, imageWidth, imageHeight); // Clear canvas
+        gc2.drawImage(image, 0, 0);
+        gc3.clearRect(0, 0, imageWidth, imageHeight); // Clear canvas
+        ga.render(gc, gc2, gc3); // Renders a optimal solution of Population in Genetic Algorithm
         updateGUI(startNanoTime, currentNanoTime);
     }
 

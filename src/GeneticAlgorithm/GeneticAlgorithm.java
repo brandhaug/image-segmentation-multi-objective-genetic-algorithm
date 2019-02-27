@@ -59,16 +59,25 @@ public class GeneticAlgorithm {
         generation++;
     }
 
-    public void render(GraphicsContext gc) {
+    public void render(GraphicsContext gc, GraphicsContext gc2, GraphicsContext gc3) {
         final long startTime = System.currentTimeMillis();
 
         List<Segment> segments = population.getRandomParetoSegments();
+        gc2.setFill(javafx.scene.paint.Color.rgb(0, 255, 0));
+        gc3.setFill(javafx.scene.paint.Color.BLACK);
+
         for (Segment segment : segments) {
             Color awtColor = segment.getAverageColor();
             javafx.scene.paint.Color fxColor = javafx.scene.paint.Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
             gc.setFill(fxColor);
             for (Pixel segmentPixel : segment.getSegmentPixels().values()) {
                 gc.fillRect(segmentPixel.getX(), segmentPixel.getY(), 1, 1);
+            }
+
+
+            for (Pixel segmentPixel : segment.getConvexHull()) {
+                gc2.fillRect(segmentPixel.getX(), segmentPixel.getY(), 1, 1);
+                gc3.fillRect(segmentPixel.getX(), segmentPixel.getY(), 1, 1);
             }
         }
 
@@ -100,35 +109,35 @@ public class GeneticAlgorithm {
                 Pixel pixel = pixelArr[y][x];
 
                 if (x + 1 < GuiController.imageWidth) { // 1. East
-                    pixel.addPixelNeighbor(pixelArr[y][x + 1]);
+                    pixel.addPixelNeighbor(pixelArr[y][x + 1], Direction.EAST);
                 }
 
                 if (x - 1 >= 0) { // 2. West
-                    pixel.addPixelNeighbor(pixelArr[y][x - 1]);
+                    pixel.addPixelNeighbor(pixelArr[y][x - 1], Direction.WEST);
                 }
 
                 if (y - 1 >= 0) { // 3. North
-                    pixel.addPixelNeighbor(pixelArr[y - 1][x]);
+                    pixel.addPixelNeighbor(pixelArr[y - 1][x], Direction.NORTH);
                 }
 
                 if (y + 1 < GuiController.imageHeight) { // 4. South
-                    pixel.addPixelNeighbor(pixelArr[y + 1][x]);
+                    pixel.addPixelNeighbor(pixelArr[y + 1][x], Direction.SOUTH);
                 }
 
                 if (y - 1 >= 0 && x + 1 < GuiController.imageWidth) { // 5. North East
-                    pixel.addPixelNeighbor(pixelArr[y - 1][x + 1]);
+                    pixel.addPixelNeighbor(pixelArr[y - 1][x + 1], Direction.NORTH_EAST);
                 }
 
                 if (y + 1 < GuiController.imageHeight && x + 1 < GuiController.imageWidth) { // 6. South East
-                    pixel.addPixelNeighbor(pixelArr[y + 1][x + 1]);
+                    pixel.addPixelNeighbor(pixelArr[y + 1][x + 1], Direction.SOUTH_EAST);
                 }
 
                 if (y - 1 >= 0 && x - 1 >= 0) { // 7. North West
-                    pixel.addPixelNeighbor(pixelArr[y - 1][x - 1]);
+                    pixel.addPixelNeighbor(pixelArr[y - 1][x - 1], Direction.NORTH_WEST);
                 }
 
                 if (y + 1 < GuiController.imageHeight && x - 1 >= 0) { // 8. South West
-                    pixel.addPixelNeighbor(pixelArr[y + 1][x - 1]);
+                    pixel.addPixelNeighbor(pixelArr[y + 1][x - 1], Direction.SOUTH_WEST);
                 }
             }
         }
@@ -174,59 +183,33 @@ public class GeneticAlgorithm {
     }
 
     private void saveParetoOptimalIndividualToFile(Individual individual, int individualIndex, String fileName, Timestamp timestamp) throws IOException {
-        byte[] segmentLists = new byte[pixels.size()];
-        Arrays.fill(segmentLists, (byte) 255);
+        byte[] imageData = new byte[pixels.size()];
+        final byte WHITE = (byte) 255;
+        final byte BLACK = 0;
+        Arrays.fill(imageData, WHITE);
 
         for (Segment segment : individual.getSegments()) {
-            for (Pixel segmentPixel : segment.getSegmentPixels().values()) {
-                boolean mostEast = true;
-                boolean mostWest = true;
-                boolean mostSouth = true;
-                boolean mostNorth = true;
-                boolean add = true;
+            segment.calculateConvexHull();
+            for (Pixel segmentPixel : segment.getConvexHull()) {
+                imageData[segmentPixel.getId()] = BLACK;
+            }
+        }
 
-                for (Pixel segmentPixelToCompare : segment.getSegmentPixels().values()) {
-                    if (segmentPixel != segmentPixelToCompare) { // Not same pixel
-                        if (segmentPixel.getY() == segmentPixelToCompare.getY()) { // Same y
-                            if (segmentPixel.getX() < segmentPixelToCompare.getX()) { // Pixel is west of pixelToCompare
-                                mostEast = false;
-                            } else if (segmentPixel.getX() > segmentPixelToCompare.getX()) { // Pixel is east of pixelToCompare
-                                mostWest = false;
-                            }
-                        } else if (segmentPixel.getX() == segmentPixelToCompare.getX()) { // Same x
-                            if (segmentPixel.getY() < segmentPixelToCompare.getY()) { // Pixel is north of pixelToCompare
-                                mostSouth = false;
-                            } else if (segmentPixel.getY() > segmentPixelToCompare.getY()) { // Pixel is south of pixelToCompare
-                                mostNorth = false;
-                            }
-                        }
-
-                        if (!mostEast && !mostWest && !mostNorth && !mostSouth) {
-                            add = false;
-                            break;
-                        }
-                    }
-                } // PixelToCompare finished
-
-                if (add) {
-                    segmentLists[segmentPixel.getId()] = 0;
-                }
-            } // Segment finished
-        } // Pareto individual finished
-
-        saveIndividualToImageFile(fileName, timestamp, individualIndex + 1, segmentLists);
+        saveIndividualToImageFile(fileName, timestamp, individualIndex + 1, imageData);
     }
 
-    private void saveIndividualToImageFile(String fileName, Timestamp timestamp, int individualIndex, byte[] segmentLists) throws IOException {
+    private void saveIndividualToImageFile(String fileName, Timestamp timestamp, int individualIndex,
+                                           byte[] imgData) throws IOException {
         BufferedImage bufferedImage = new BufferedImage(GuiController.imageWidth, GuiController.imageHeight, BufferedImage.TYPE_BYTE_GRAY);
         final byte[] dataBuffer = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
-        System.arraycopy(segmentLists, 0, dataBuffer, 0, segmentLists.length);
+        System.arraycopy(imgData, 0, dataBuffer, 0, imgData.length);
 
         File jpegFile = new File("solution-" + fileName + "-" + timestamp.getTime() + "-" + individualIndex + ".jpg");
         ImageIO.write(bufferedImage, "jpg", jpegFile);
     }
 
-    private void saveIndividualToTextFile(String fileName, Timestamp timestamp, int individualIndex, byte[] segmentLists) throws IOException {
+    private void saveIndividualToTextFile(String fileName, Timestamp timestamp, int individualIndex,
+                                          byte[] segmentLists) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter("solution-" + fileName + "-" + timestamp.getTime() + "-" + individualIndex + ".txt"));
         for (int i = 0; i < segmentLists.length; i++) {
             writer.write(segmentLists[i]);

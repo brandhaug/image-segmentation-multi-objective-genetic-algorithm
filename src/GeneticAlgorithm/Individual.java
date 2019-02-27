@@ -121,6 +121,12 @@ class Individual {
         }
     }
 
+    void calculateConvexHulls() {
+        for (Segment segment : segments) {
+            segment.calculateConvexHull();
+        }
+    }
+
     private void calculateObjectiveFunctions() {
         overallDeviation = 0.0;
         connectivity = 0.0;

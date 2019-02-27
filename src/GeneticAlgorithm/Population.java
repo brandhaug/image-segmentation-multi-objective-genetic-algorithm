@@ -274,9 +274,13 @@ class Population {
 
     List<Segment> getRandomParetoSegments() {
         int randomIndex;
+        Individual individual;
         do {
             randomIndex = Utils.randomIndex(individuals.size());
-        } while (individuals.get(randomIndex).getRank() != 1);
+            individual = individuals.get(randomIndex);
+        } while (individual.getRank() != 1);
+
+        individual.calculateConvexHulls();
 
         return individuals.get(randomIndex).getSegments();
     }

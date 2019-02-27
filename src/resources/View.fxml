@@ -13,11 +13,14 @@
 <AnchorPane fx:id="anchorPane" styleClass="anchorpane"
             xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="Main.GuiController">
-    <children>
-        <HBox fx:id="hbox" alignment="CENTER" styleClass="hbox">
-            <children>
-                <VBox fx:id="vboxLeft" alignment="CENTER">
+    <HBox fx:id="hbox" alignment="CENTER" styleClass="hbox">
+        <VBox fx:id="vboxLeft" alignment="CENTER" spacing="10">
+            <HBox alignment="CENTER" spacing="10">
                 <Canvas fx:id="canvas"/>
+                <Canvas fx:id="canvas2"/>
+            </HBox>
+            <HBox alignment="CENTER" spacing="10">
+                <Canvas fx:id="canvas3"/>
                 <ScatterChart fx:id="scatterChart" legendVisible="false">
                     <xAxis>
                         <NumberAxis fx:id="xAxis" side="BOTTOM"/>
@@ -26,21 +29,18 @@
                         <NumberAxis fx:id="yAxis" side="LEFT"/>
                     </yAxis>
                 </ScatterChart>
-                </VBox>
-                <VBox fx:id="vboxRight" alignment="CENTER" styleClass="vbox">
-                    <children>
-                        <ComboBox fx:id="imageSelector" onAction="#selectImage" styleClass="combo-box"/>
-                        <Label fx:id="timeLabel" styleClass="label" text="Time: 0" textAlignment="CENTER"/>
-                        <Label fx:id="generationLabel" styleClass="label" text="Generation: 0" textAlignment="CENTER"/>
-                        <Button fx:id="startButton" mnemonicParsing="false" onAction="#togglePaused" styleClass="button"
-                                text="Start"/>
-                        <Button fx:id="resetButton" mnemonicParsing="false" onAction="#reset" styleClass="button"
-                                text="Reset"/>
-                        <Button fx:id="saveButton" mnemonicParsing="false" onAction="#save" styleClass="button"
-                                text="Save"/>
-                    </children>
-                </VBox>
-            </children>
-        </HBox>
-    </children>
+            </HBox>
+        </VBox>
+        <VBox fx:id="vboxRight" alignment="CENTER" styleClass="vbox">
+            <ComboBox fx:id="imageSelector" onAction="#selectImage" styleClass="combo-box"/>
+            <Label fx:id="timeLabel" styleClass="label" text="Time: 0" textAlignment="CENTER"/>
+            <Label fx:id="generationLabel" styleClass="label" text="Generation: 0" textAlignment="CENTER"/>
+            <Button fx:id="startButton" mnemonicParsing="false" onAction="#togglePaused" styleClass="button"
+                    text="Start"/>
+            <Button fx:id="resetButton" mnemonicParsing="false" onAction="#reset" styleClass="button"
+                    text="Reset"/>
+            <Button fx:id="saveButton" mnemonicParsing="false" onAction="#save" styleClass="button"
+                    text="Save"/>
+        </VBox>
+    </HBox>
 </AnchorPane>

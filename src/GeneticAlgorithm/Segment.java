@@ -4,7 +4,9 @@ import Main.GuiController;
 import Utils.Utils;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -16,9 +18,11 @@ class Segment {
     private Color centroidColor;
     private double overallDeviation;
     private double connectivity;
+    private List<Pixel> convexHull;
 
     Segment() {
         segmentPixels = new HashMap<>();
+        convexHull = new ArrayList<>();
     }
 
     void addSegmentPixel(Pixel pixel) {
@@ -99,6 +103,25 @@ class Segment {
 
         centroidColor = centroidPixel.getColor();
         averageColor = new Color(averageRed, averageGreen, averageBlue);
+    }
+
+    void calculateConvexHull() {
+        for (Pixel segmentPixel : segmentPixels.values()) {
+            for (PixelNeighbor pixelNeighbor : segmentPixel.getPixelNeighbors()) {
+                if ((pixelNeighbor.getDirection() == Direction.EAST ||
+                        pixelNeighbor.getDirection() == Direction.WEST ||
+                        pixelNeighbor.getDirection() == Direction.NORTH ||
+                        pixelNeighbor.getDirection() == Direction.SOUTH) &&
+                        !segmentPixels.containsKey(pixelNeighbor.getNeighbor().getId())) {
+                    convexHull.add(segmentPixel);
+                    break;
+                }
+            }
+        }
+    }
+
+    List<Pixel> getConvexHull() {
+        return convexHull;
     }
 
     Color getCentroidColor() {

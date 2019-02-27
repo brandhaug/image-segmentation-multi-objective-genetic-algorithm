@@ -36,9 +36,9 @@ class Pixel {
         return pixelNeighbors;
     }
 
-    void addPixelNeighbor(Pixel neighbor) {
+    void addPixelNeighbor(Pixel neighbor, Direction direction) {
         double colorDistance = Utils.getEuclideanColorDistance(color, neighbor.getColor());
-        PixelNeighbor pixelNeighbor = new PixelNeighbor(this, neighbor, colorDistance);
+        PixelNeighbor pixelNeighbor = new PixelNeighbor(this, neighbor, colorDistance, direction);
         pixelNeighbors.add(pixelNeighbor);
     }
 
