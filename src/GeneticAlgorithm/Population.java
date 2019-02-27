@@ -145,7 +145,7 @@ class Population {
             List<Individual> newFront = new ArrayList<>(); // Q
             for (Individual individual : front) { // p in F
                 for (Individual dominatedIndividual : dominatedIndividuals.get(individual)) { // q in S
-                    int dominatedCount = dominatedCounts.get(individual) - 1;
+                    int dominatedCount = dominatedCounts.get(dominatedIndividual) - 1;
                     dominatedCounts.put(dominatedIndividual, dominatedCount);
 
                     if (dominatedCount == 0) {
@@ -273,11 +273,10 @@ class Population {
     }
 
     List<Segment> getRandomParetoSegments() {
-        // TODO
         int randomIndex;
-//        do {
-        randomIndex = Utils.randomIndex(individuals.size());
-//        } while (individuals.get(randomIndex).getRank() != 1);
+        do {
+            randomIndex = Utils.randomIndex(individuals.size());
+        } while (individuals.get(randomIndex).getRank() != 1);
 
         return individuals.get(randomIndex).getSegments();
     }
