@@ -273,10 +273,11 @@ class Population {
     }
 
     List<Segment> getRandomParetoSegments() {
+        // TODO
         int randomIndex;
-        do {
-            randomIndex = Utils.randomIndex(individuals.size());
-        } while (individuals.get(randomIndex).getRank() != 1);
+//        do {
+        randomIndex = Utils.randomIndex(individuals.size());
+//        } while (individuals.get(randomIndex).getRank() != 1);
 
         return individuals.get(randomIndex).getSegments();
     }
