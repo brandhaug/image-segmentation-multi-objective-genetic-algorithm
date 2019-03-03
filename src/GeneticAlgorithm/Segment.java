@@ -22,7 +22,6 @@ class Segment {
 
     Segment() {
         segmentPixels = new HashMap<>();
-        convexHull = new ArrayList<>();
     }
 
     void addSegmentPixel(Pixel pixel) {
@@ -51,7 +50,7 @@ class Segment {
                 }
             }
 
-            overallDeviation += Utils.getEuclideanColorDistance(segmentPixel.getColor(), centroidColor); // dist(i, μ)
+            overallDeviation += Utils.getEuclideanColorDistance(segmentPixel.getColor(), averageColor); // dist(i, μ)
         }
     }
 
@@ -106,6 +105,8 @@ class Segment {
     }
 
     void calculateConvexHull() {
+        convexHull = new ArrayList<>();
+
         for (Pixel segmentPixel : segmentPixels.values()) {
             for (PixelNeighbor pixelNeighbor : segmentPixel.getPixelNeighbors()) {
                 if ((pixelNeighbor.getDirection() == Direction.EAST ||

@@ -121,12 +121,18 @@ class Individual {
         }
     }
 
+    /**
+     * Calculate convex hull pixels for each segment
+     */
     void calculateConvexHulls() {
         for (Segment segment : segments) {
             segment.calculateConvexHull();
         }
     }
 
+    /**
+     * Calculates overall deviation and connectivity
+     */
     private void calculateObjectiveFunctions() {
         overallDeviation = 0.0;
         connectivity = 0.0;
@@ -144,6 +150,13 @@ class Individual {
     boolean dominates(Individual otherIndividual) {
         return (overallDeviation <= otherIndividual.getOverallDeviation() && connectivity <= otherIndividual.getConnectivity()) &&
                 (overallDeviation < otherIndividual.getOverallDeviation() || connectivity < otherIndividual.getConnectivity());
+    }
+
+    /**
+     * Calculates fitness for simple GA
+     */
+    private void calculateFitness() {
+        fitness = overallDeviation + connectivity;
     }
 
     List<Segment> getSegments() {

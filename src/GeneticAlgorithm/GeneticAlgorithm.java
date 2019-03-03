@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class GeneticAlgorithm {
 
     // Parameters
-    final static int populationSize = 50; // 20-100 dependent on problem
+    final static int populationSize = 70; // 20-100 dependent on problem
     final static double mutationRate = 0.2; // 0.5%-1%.
     final static int tournamentSize = 3; // Number of members in tournament selection
 

@@ -106,6 +106,7 @@ public class GuiController {
             gc = canvas.getGraphicsContext2D();
             gc2 = canvas2.getGraphicsContext2D();
             gc3 = canvas3.getGraphicsContext2D();
+            resetCanvases();
             renderImage();
             System.out.println("Image read and rendered in " + ((System.currentTimeMillis() - startTime)) + "ms");
             ga = new GeneticAlgorithm(colorArr);
@@ -192,11 +193,15 @@ public class GuiController {
 
     }
 
-    private void render(long startNanoTime, long currentNanoTime) {
+    private void resetCanvases() {
         gc.clearRect(0, 0, imageWidth, imageHeight); // Clear canvas
         gc2.clearRect(0, 0, imageWidth, imageHeight); // Clear canvas
-        gc2.drawImage(image, 0, 0);
         gc3.clearRect(0, 0, imageWidth, imageHeight); // Clear canvas
+    }
+
+    private void render(long startNanoTime, long currentNanoTime) {
+        resetCanvases();
+        gc2.drawImage(image, 0, 0);
         ga.render(gc, gc2, gc3); // Renders a optimal solution of Population in Genetic Algorithm
         updateGUI(startNanoTime, currentNanoTime);
     }

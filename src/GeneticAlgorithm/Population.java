@@ -85,6 +85,8 @@ class Population {
         executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
         System.out.println("Segments in " + offspringIndividuals.size() + " offspring individuals calculated in " + ((System.currentTimeMillis() - startTime2) / 1000) + "s");
 
+        offspringIndividuals.removeIf(offspringIndividual -> offspringIndividual.getSegments().size() > GeneticAlgorithm.maxSegments);
+
         int averageSegmentsSize = 0;
         for (Individual offspringIndividual : offspringIndividuals) {
             averageSegmentsSize += offspringIndividual.getSegments().size();
