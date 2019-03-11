@@ -54,7 +54,7 @@ public class GeneticAlgorithm {
         if (generation == 0) {
             population = new Population();
         } else {
-            population.tick();
+            population.tick(generation);
         }
         generation++;
     }

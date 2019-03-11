@@ -30,7 +30,7 @@ class Population {
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         for (int i = 0; i < GeneticAlgorithm.populationSize; i++) {
             executorService.execute(() -> {
-                Individual individual = new Individual();
+                Individual individual = new Individual(0);
                 individuals.add(individual);
             });
         }
@@ -48,7 +48,7 @@ class Population {
     /**
      * NSGA-II
      */
-    void tick() throws InterruptedException {
+    void tick(int generation) throws InterruptedException {
         final long startTime = System.currentTimeMillis();
         List<Individual> offspringIndividuals = new ArrayList<>();
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -73,19 +73,23 @@ class Population {
 
                     // Add offspring
                     executorService.execute(() -> {
-                        Individual newIndividual = new Individual(newChromosome);
+                        Individual newIndividual = new Individual(newChromosome, generation);
                         offspringIndividuals.add(newIndividual);
                     });
                 }
             }
         }
 
+        // Wait for offspring to finish construction
         final long startTime2 = System.currentTimeMillis();
         executorService.shutdown();
         executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
         System.out.println("Segments in " + offspringIndividuals.size() + " offspring individuals calculated in " + ((System.currentTimeMillis() - startTime2) / 1000) + "s");
 
-        offspringIndividuals.removeIf(offspringIndividual -> offspringIndividual.getSegments().size() > GeneticAlgorithm.maxSegments);
+        // Filter out infeasible offspring
+        offspringIndividuals.removeIf(offspringIndividual ->
+                offspringIndividual.getSegments().size() > GeneticAlgorithm.maxSegments ||
+                offspringIndividual.getSegments().size() < GeneticAlgorithm.minSegments);
 
         int averageSegmentsSize = 0;
         for (Individual offspringIndividual : offspringIndividuals) {
@@ -95,6 +99,7 @@ class Population {
         averageSegmentsSize = averageSegmentsSize / offspringIndividuals.size();
         System.out.println("Average segment size in offspring: " + averageSegmentsSize);
 
+        // Add offspring to population
         individuals.addAll(offspringIndividuals);
 
         fastNonDominatedSort();

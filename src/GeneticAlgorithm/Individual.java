@@ -29,15 +29,19 @@ class Individual {
     // Dominated sorting
     private double crowdingDistance;
 
-    Individual() {
+    private int generation;
+
+    Individual(int generation) {
         this.chromosome = new ArrayList<>(GeneticAlgorithm.initialChromosome);
+        this.generation = generation;
         segments = new ArrayList<>();
         generateInitialIndividual();
         calculateObjectiveFunctions();
     }
 
-    Individual(List<Integer> chromosome) {
+    Individual(List<Integer> chromosome, int generation) {
         this.chromosome = new ArrayList<>(chromosome);
+        this.generation = generation;
         segments = new ArrayList<>();
         calculateSegments();
         calculateObjectiveFunctions();
@@ -202,6 +206,7 @@ class Individual {
                 ", connectivity=" + connectivity +
                 ", rank=" + rank +
                 ", crowdingDistance=" + crowdingDistance +
+                ", generation=" + generation +
                 '}';
     }
 }
