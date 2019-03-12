@@ -207,6 +207,7 @@ class Individual {
                 ", rank=" + rank +
                 ", crowdingDistance=" + crowdingDistance +
                 ", generation=" + generation +
+                ", segments=" + segments.size() +
                 '}';
     }
 }

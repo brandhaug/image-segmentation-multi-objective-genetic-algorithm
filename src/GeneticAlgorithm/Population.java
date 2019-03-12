@@ -89,7 +89,7 @@ class Population {
         // Filter out infeasible offspring
         offspringIndividuals.removeIf(offspringIndividual ->
                 offspringIndividual.getSegments().size() > GeneticAlgorithm.maxSegments ||
-                offspringIndividual.getSegments().size() < GeneticAlgorithm.minSegments);
+                        offspringIndividual.getSegments().size() < GeneticAlgorithm.minSegments);
 
         int averageSegmentsSize = 0;
         for (Individual offspringIndividual : offspringIndividuals) {
@@ -269,13 +269,32 @@ class Population {
         newChromosomes.add(newChromosome);
         newChromosomes.add(newChromosome2);
 
+        for (List<Integer> chromosome : newChromosomes) {
+            repairChromosome(chromosome);
+        }
+
         return newChromosomes;
+    }
+
+
+    private void repairChromosome(List<Integer> chromosome) {
+        for (int pixelId = 0; pixelId < chromosome.size(); pixelId++) {
+            int neighborId = chromosome.get(pixelId);
+
+            while (neighborId == pixelId) {
+                Pixel neighbor = GeneticAlgorithm.pixels.get(neighborId);
+                int randomNeighborIndex = Utils.randomIndex(neighbor.getPixelNeighbors().size());
+                neighborId = neighbor.getPixelNeighbors().get(randomNeighborIndex).getNeighbor().getId();
+                int neighborsNeighborId = chromosome.get(neighborId);
+                chromosome.set(neighborId, neighborsNeighborId);
+            }
+        }
     }
 
     private void swapMutate(List<Integer> chromosome) {
         int indexA = Utils.randomIndex(chromosome.size());
         int randomNeighborIndex = Utils.randomIndex(GeneticAlgorithm.pixels.get(indexA).getPixelNeighbors().size());
-        int indexB = GeneticAlgorithm.pixels.get(indexA).getPixelNeighbors().get(randomNeighborIndex).getPixel().getId();
+        int indexB = GeneticAlgorithm.pixels.get(indexA).getPixelNeighbors().get(randomNeighborIndex).getNeighbor().getId();
         Collections.swap(chromosome, indexA, indexB);
     }
 
