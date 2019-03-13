@@ -42,11 +42,11 @@ class Segment {
         connectivity = 0.0;
 
         for (Pixel segmentPixel : segmentPixels.values()) {
-            for (int j = 0; j < segmentPixel.getEdges().size(); j++) {
-                Pixel neighbor = segmentPixel.getEdges().get(j).getNeighbor();
+            for (Edge edge : segmentPixel.getEdges()) {
+                Pixel neighbor = edge.getNeighbor();
 
                 if (!segmentPixels.containsKey(neighbor.getId())) {
-                    connectivity += (1 / (double) (j + 1));
+                    connectivity += (double) 1 / segmentPixel.getEdges().size();
                 }
             }
 
@@ -101,10 +101,7 @@ class Segment {
 
         for (Pixel segmentPixel : segmentPixels.values()) {
             for (Edge edge : segmentPixel.getEdges()) {
-                if ((edge.getDirection() == Direction.EAST ||
-                        edge.getDirection() == Direction.WEST ||
-                        edge.getDirection() == Direction.NORTH ||
-                        edge.getDirection() == Direction.SOUTH) &&
+                if ((edge.getDirection() == Direction.EAST || edge.getDirection() == Direction.SOUTH) &&
                         !segmentPixels.containsKey(edge.getNeighbor().getId())) {
                     convexHull.add(segmentPixel);
                     break;

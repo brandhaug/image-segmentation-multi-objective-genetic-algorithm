@@ -199,6 +199,10 @@ class Individual {
         return chromosome;
     }
 
+    int getGeneration() {
+        return generation;
+    }
+
     @Override
     public String toString() {
         return "Individual{" +

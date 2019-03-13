@@ -5,14 +5,16 @@ import javafx.scene.canvas.GraphicsContext;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -23,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class GeneticAlgorithm {
 
     // Parameters
-    final static int populationSize = 20; // 20-100 dependent on problem
+    final static int populationSize = 50; // 20-100 dependent on problem
     final static double mutationRate = 0.2; // 0.5%-1%.
     final static int tournamentSize = 3; // Number of members in tournament selection
 
@@ -183,29 +185,21 @@ public class GeneticAlgorithm {
     }
 
     private void saveParetoOptimalIndividualToFile(Individual individual, int individualIndex, String fileName, Timestamp timestamp) throws IOException {
-        byte[] imageData = new byte[pixels.size()];
-        final byte WHITE = (byte) 255;
-        final byte BLACK = 0;
-        Arrays.fill(imageData, WHITE);
+        BufferedImage image = new BufferedImage(GuiController.imageWidth, GuiController.imageHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = image.createGraphics();
+        graphics.setColor(Color.WHITE);
+        graphics.fillRect(1, 1, image.getWidth(), image.getHeight());
+        graphics.setColor(Color.BLACK);
 
         for (Segment segment : individual.getSegments()) {
             segment.calculateConvexHull();
             for (Pixel segmentPixel : segment.getConvexHull()) {
-                imageData[segmentPixel.getId()] = BLACK;
+                graphics.fillRect(segmentPixel.getX(), segmentPixel.getY(), 1, 1);
             }
         }
 
-        saveIndividualToImageFile(fileName, timestamp, individualIndex + 1, imageData);
-    }
-
-    private void saveIndividualToImageFile(String fileName, Timestamp timestamp, int individualIndex,
-                                           byte[] imgData) throws IOException {
-        BufferedImage bufferedImage = new BufferedImage(GuiController.imageWidth, GuiController.imageHeight, BufferedImage.TYPE_BYTE_GRAY);
-        final byte[] dataBuffer = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
-        System.arraycopy(imgData, 0, dataBuffer, 0, imgData.length);
-
-        File jpegFile = new File("solution-" + fileName + "-" + timestamp.getTime() + "-" + individualIndex + ".jpg");
-        ImageIO.write(bufferedImage, "jpg", jpegFile);
+        File jpegFile = new File("solution-" + fileName + "-" + timestamp.getTime() + "-" + individual.getGeneration() + "-" + individualIndex + ".jpg");
+        ImageIO.write(image, "jpg", jpegFile);
     }
 
     private void saveIndividualToTextFile(String fileName, Timestamp timestamp, int individualIndex,

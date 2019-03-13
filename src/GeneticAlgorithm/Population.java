@@ -91,17 +91,22 @@ class Population {
             averageSegmentsSize += offspringIndividual.getSegments().size();
         }
 
-        averageSegmentsSize = averageSegmentsSize / offspringIndividuals.size();
-        System.out.println("Average segment size in offspring: " + averageSegmentsSize);
+        if (offspringIndividuals.size() == 0) {
+            System.out.println("No feasible offspring");
+        } else {
+            averageSegmentsSize = averageSegmentsSize / offspringIndividuals.size();
+            System.out.println(offspringIndividuals.size() + " feasible offspring");
+            System.out.println("Average segment size in offspring: " + averageSegmentsSize);
 
-        // Add offspring to population
-        individuals.addAll(offspringIndividuals);
+            // Add offspring to population
+            individuals.addAll(offspringIndividuals);
 
-        fastNonDominatedSort();
-        calculateCrowdingDistances();
+            fastNonDominatedSort();
+            calculateCrowdingDistances();
 
-        individuals.sort(Comparator.comparingDouble(Individual::getRank).thenComparing(Individual::getCrowdingDistance, Collections.reverseOrder()));
-        individuals = new ArrayList<>(individuals.subList(0, GeneticAlgorithm.populationSize));
+            individuals.sort(Comparator.comparingDouble(Individual::getRank).thenComparing(Individual::getCrowdingDistance, Collections.reverseOrder()));
+            individuals = new ArrayList<>(individuals.subList(0, GeneticAlgorithm.populationSize));
+        }
 
         System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
         System.out.println("New generation generated in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
