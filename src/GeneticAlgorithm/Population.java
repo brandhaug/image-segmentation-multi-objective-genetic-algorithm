@@ -82,9 +82,7 @@ class Population {
         System.out.println("Segments in " + offspringIndividuals.size() + " offspring individuals calculated in " + ((System.currentTimeMillis() - startTime2) / 1000) + "s");
 
         // Filter out infeasible offspring
-        offspringIndividuals.removeIf(offspringIndividual ->
-                offspringIndividual.getSegments().size() > GeneticAlgorithm.maxSegments ||
-                        offspringIndividual.getSegments().size() < GeneticAlgorithm.minSegments);
+        offspringIndividuals.removeIf(offspringIndividual -> !offspringIndividual.isFeasible());
 
         int averageSegmentsSize = 0;
         for (Individual offspringIndividual : offspringIndividuals) {

@@ -25,12 +25,12 @@ import java.util.concurrent.TimeUnit;
 public class GeneticAlgorithm {
 
     // Parameters
-    final static int populationSize = 50; // 20-100 dependent on problem
+    final static int populationSize = 40; // 20-100 dependent on problem
     final static double mutationRate = 0.2; // 0.5%-1%.
     final static int tournamentSize = 3; // Number of members in tournament selection
 
-    final static int minSegments = 5;
-    final static int maxSegments = 12;
+    final static int minSegments = 3;
+    final static int maxSegments = 15;
 
     final static int numberOfSplits = 3;
 
@@ -198,13 +198,13 @@ public class GeneticAlgorithm {
             }
         }
 
-        File jpegFile = new File("solution-" + fileName + "-" + timestamp.getTime() + "-" + individual.getGeneration() + "-" + individualIndex + ".jpg");
+        File jpegFile = new File("solution=" + fileName + "_time=" + timestamp.getTime() + "_gen=" + individual.getGeneration() + "_seg=" + individual.getSegments().size() +  "_i=" + individualIndex + ".jpg");
         ImageIO.write(image, "jpg", jpegFile);
     }
 
     private void saveIndividualToTextFile(String fileName, Timestamp timestamp, int individualIndex,
                                           byte[] segmentLists) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter("solution-" + fileName + "-" + timestamp.getTime() + "-" + individualIndex + ".txt"));
+        BufferedWriter writer = new BufferedWriter(new FileWriter("solution-file=" + fileName + "-time=" + timestamp.getTime() + "-index=" + individualIndex + ".txt"));
         for (int i = 0; i < segmentLists.length; i++) {
             writer.write(segmentLists[i]);
 

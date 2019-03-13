@@ -31,6 +31,8 @@ class Individual {
 
     private int generation;
 
+    private boolean feasible = true;
+
     Individual(int generation) {
         this.chromosome = new ArrayList<>(GeneticAlgorithm.initialChromosome);
         this.generation = generation;
@@ -104,6 +106,11 @@ class Individual {
                 newSegment.addSegmentPixel(pixel);
                 segments.add(newSegment);
 
+                if (segments.size() > GeneticAlgorithm.maxSegments) {
+                    feasible = false;
+                    break;
+                }
+
                 visitedPixels.put(pixel, newSegment);
 
                 List<Edge> edges = GeneticAlgorithm.pixels.get(pixelId).getEdges();
@@ -122,6 +129,10 @@ class Individual {
                     }
                 }
             }
+        }
+
+        if (segments.size() < GeneticAlgorithm.minSegments) {
+            feasible = false;
         }
     }
 
@@ -201,6 +212,10 @@ class Individual {
 
     int getGeneration() {
         return generation;
+    }
+
+    public boolean isFeasible() {
+        return feasible;
     }
 
     @Override
