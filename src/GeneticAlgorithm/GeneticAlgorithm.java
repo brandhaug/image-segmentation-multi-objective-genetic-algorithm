@@ -172,7 +172,7 @@ public class GeneticAlgorithm {
             if (individual.getRank() == 1) {
                 executorService.execute(() -> {
                     try {
-                        saveParetoOptimalIndividualToFile(individual, individuals.indexOf(individual), fileName, timestamp);
+                        saveIndividualToImageFile(individual, individuals.indexOf(individual), fileName, timestamp);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -184,7 +184,7 @@ public class GeneticAlgorithm {
         executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
     }
 
-    private void saveParetoOptimalIndividualToFile(Individual individual, int individualIndex, String fileName, Timestamp timestamp) throws IOException {
+    private void saveIndividualToImageFile(Individual individual, int individualIndex, String fileName, Timestamp timestamp) throws IOException {
         BufferedImage image = new BufferedImage(GuiController.imageWidth, GuiController.imageHeight, BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics = image.createGraphics();
         graphics.setColor(Color.WHITE);
