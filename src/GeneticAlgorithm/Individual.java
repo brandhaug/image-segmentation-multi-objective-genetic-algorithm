@@ -52,7 +52,7 @@ class Individual {
      */
     private void generateInitialIndividual() {
         Map<Integer, Segment> visitedPixels = new HashMap<>();
-        PriorityQueue<PixelNeighbor> possibleNeighbors = new PriorityQueue<>(); // Support array for all possible visits. Sorted by colorDistance
+        PriorityQueue<Edge> possibleNeighbors = new PriorityQueue<>(); // Support array for all possible visits. Sorted by colorDistance
 
         int numberOfSegments = Utils.randomInt(GeneticAlgorithm.minSegments, GeneticAlgorithm.maxSegments);
 
@@ -70,18 +70,18 @@ class Individual {
             segments.add(newSegment);
 
             visitedPixels.put(rootPixel.getId(), newSegment);
-            possibleNeighbors.addAll(rootPixel.getPixelNeighbors());
+            possibleNeighbors.addAll(rootPixel.getEdges());
         }
 
         // Add all neighbors
         while (!possibleNeighbors.isEmpty()) {
-            PixelNeighbor bestPixelNeighbor = possibleNeighbors.remove();
-            Pixel bestNeighbor = bestPixelNeighbor.getNeighbor();
-            Pixel bestPixel = bestPixelNeighbor.getPixel();
+            Edge bestEdge = possibleNeighbors.remove();
+            Pixel bestNeighbor = bestEdge.getNeighbor();
+            Pixel bestPixel = bestEdge.getPixel();
             Segment segment = visitedPixels.get(bestPixel.getId());
 
             if (!visitedPixels.containsKey(bestNeighbor.getId())) {
-                possibleNeighbors.addAll(bestNeighbor.getPixelNeighbors());
+                possibleNeighbors.addAll(bestNeighbor.getEdges());
                 visitedPixels.put(bestNeighbor.getId(), segment);
                 chromosome.set(bestNeighbor.getId(), bestPixel.getId());
                 segment.addSegmentPixel(bestNeighbor);
@@ -94,7 +94,7 @@ class Individual {
      */
     private void calculateSegments() {
         Map<Pixel, Segment> visitedPixels = new HashMap<>();
-        Queue<PixelNeighbor> possiblePixelNeighbors = new LinkedList<>();
+        Queue<Edge> possibleEdges = new LinkedList<>();
 
         for (int pixelId = 0; pixelId < chromosome.size(); pixelId++) {
             Pixel pixel = GeneticAlgorithm.pixels.get(pixelId);
@@ -106,18 +106,18 @@ class Individual {
 
                 visitedPixels.put(pixel, newSegment);
 
-                List<PixelNeighbor> pixelNeighbors = GeneticAlgorithm.pixels.get(pixelId).getPixelNeighbors();
-                possiblePixelNeighbors.addAll(pixelNeighbors);
+                List<Edge> edges = GeneticAlgorithm.pixels.get(pixelId).getEdges();
+                possibleEdges.addAll(edges);
 
-                while (!possiblePixelNeighbors.isEmpty()) {
-                    PixelNeighbor pixelNeighbor = possiblePixelNeighbors.poll();
-                    Pixel selectedNeighbor = pixelNeighbor.getNeighbor();
-                    Pixel selectedPixel = pixelNeighbor.getPixel();
+                while (!possibleEdges.isEmpty()) {
+                    Edge edge = possibleEdges.poll();
+                    Pixel selectedNeighbor = edge.getNeighbor();
+                    Pixel selectedPixel = edge.getPixel();
 
                     if (!visitedPixels.containsKey(selectedNeighbor) && (chromosome.get(selectedNeighbor.getId()) == selectedPixel.getId() || chromosome.get(selectedPixel.getId()) == selectedNeighbor.getId())) {
                         Segment segment = visitedPixels.get(selectedPixel);
                         segment.addSegmentPixel(selectedNeighbor);
-                        possiblePixelNeighbors.addAll(selectedNeighbor.getPixelNeighbors());
+                        possibleEdges.addAll(selectedNeighbor.getEdges());
                         visitedPixels.put(selectedNeighbor, segment);
                     }
                 }

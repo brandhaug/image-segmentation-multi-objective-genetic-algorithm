@@ -2,12 +2,7 @@ package GeneticAlgorithm;
 
 import Utils.Utils;
 
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -279,22 +274,53 @@ class Population {
 
     private void repairChromosome(List<Integer> chromosome) {
         for (int pixelId = 0; pixelId < chromosome.size(); pixelId++) {
+            Queue<Edge> priorityQueue = new PriorityQueue<>();
+            boolean repaired = true;
             int neighborId = chromosome.get(pixelId);
 
-            while (neighborId == pixelId) {
-                Pixel neighbor = GeneticAlgorithm.pixels.get(neighborId);
-                int randomNeighborIndex = Utils.randomIndex(neighbor.getPixelNeighbors().size());
-                neighborId = neighbor.getPixelNeighbors().get(randomNeighborIndex).getNeighbor().getId();
-                int neighborsNeighborId = chromosome.get(neighborId);
-                chromosome.set(neighborId, neighborsNeighborId);
+            if (pixelId != neighborId && chromosome.get(neighborId) == pixelId) {
+                repaired = false;
+            }
+
+            while (!repaired) {
+                // Pixel and neighbor pointing to eachother
+                priorityQueue.addAll(GeneticAlgorithm.pixels.get(pixelId).getEdges());
+
+                while (!priorityQueue.isEmpty()) {
+                    Pixel potentialNeighbor = priorityQueue.poll().getNeighbor();
+
+                    if (chromosome.get(potentialNeighbor.getId()) != pixelId) {
+                        chromosome.set(pixelId, potentialNeighbor.getId());
+                        repaired = true;
+                        break;
+                    }
+                }
+
+                // No neighbors possible, pointing to self
+                if (!repaired) {
+                    System.out.println("No neighbors possible");
+                    chromosome.set(pixelId, pixelId);
+                    repaired = true;
+                }
             }
         }
+
+
+//        int counter = 0;
+//        for (int pixelId = 0; pixelId < chromosome.size(); pixelId++) {
+//            int neighborId = chromosome.get(pixelId);
+//
+//            if (chromosome.get(neighborId) == pixelId) {
+//                counter++;
+//            }
+//        }
+//        System.out.println(counter);
     }
 
     private void swapMutate(List<Integer> chromosome) {
         int indexA = Utils.randomIndex(chromosome.size());
-        int randomNeighborIndex = Utils.randomIndex(GeneticAlgorithm.pixels.get(indexA).getPixelNeighbors().size());
-        int indexB = GeneticAlgorithm.pixels.get(indexA).getPixelNeighbors().get(randomNeighborIndex).getNeighbor().getId();
+        int randomNeighborIndex = Utils.randomIndex(GeneticAlgorithm.pixels.get(indexA).getEdges().size());
+        int indexB = GeneticAlgorithm.pixels.get(indexA).getEdges().get(randomNeighborIndex).getNeighbor().getId();
         Collections.swap(chromosome, indexA, indexB);
     }
 

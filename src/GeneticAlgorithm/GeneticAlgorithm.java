@@ -12,9 +12,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -25,12 +23,12 @@ import java.util.concurrent.TimeUnit;
 public class GeneticAlgorithm {
 
     // Parameters
-    final static int populationSize = 70; // 20-100 dependent on problem
+    final static int populationSize = 20; // 20-100 dependent on problem
     final static double mutationRate = 0.2; // 0.5%-1%.
     final static int tournamentSize = 3; // Number of members in tournament selection
 
-    final static int minSegments = 3;
-    final static int maxSegments = 50;
+    final static int minSegments = 5;
+    final static int maxSegments = 12;
 
     final static int numberOfSplits = 3;
 
@@ -165,6 +163,8 @@ public class GeneticAlgorithm {
     public void saveParetoOptimalIndividualsToFile(String fileName, Timestamp timestamp) throws InterruptedException {
         List<Individual> individuals = population.getIndividuals();
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+        individuals.sort(Comparator.comparingDouble(Individual::getOverallDeviation));
 
         for (Individual individual : individuals) {
             if (individual.getRank() == 1) {

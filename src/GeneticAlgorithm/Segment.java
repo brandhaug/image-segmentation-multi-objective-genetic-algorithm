@@ -15,7 +15,7 @@ import java.util.Map;
 class Segment {
     private Map<Integer, Pixel> segmentPixels;
     private Color averageColor;
-    private Color centroidColor;
+    private Color centroidPixelColor;
     private double overallDeviation;
     private double connectivity;
     private List<Pixel> convexHull;
@@ -42,8 +42,8 @@ class Segment {
         connectivity = 0.0;
 
         for (Pixel segmentPixel : segmentPixels.values()) {
-            for (int j = 0; j < segmentPixel.getPixelNeighbors().size(); j++) {
-                Pixel neighbor = segmentPixel.getPixelNeighbors().get(j).getNeighbor();
+            for (int j = 0; j < segmentPixel.getEdges().size(); j++) {
+                Pixel neighbor = segmentPixel.getEdges().get(j).getNeighbor();
 
                 if (!segmentPixels.containsKey(neighbor.getId())) {
                     connectivity += (1 / (double) (j + 1));
@@ -52,14 +52,6 @@ class Segment {
 
             overallDeviation += Utils.getEuclideanColorDistance(segmentPixel.getColor(), averageColor); // dist(i, μ)
         }
-    }
-
-    double getOverallDeviation() {
-        return overallDeviation;
-    }
-
-    double getConnectivity() {
-        return connectivity;
     }
 
     /**
@@ -100,7 +92,7 @@ class Segment {
             throw new NullPointerException("CentroidPixel is null");
         }
 
-        centroidColor = centroidPixel.getColor();
+        centroidPixelColor = centroidPixel.getColor();
         averageColor = new Color(averageRed, averageGreen, averageBlue);
     }
 
@@ -108,12 +100,12 @@ class Segment {
         convexHull = new ArrayList<>();
 
         for (Pixel segmentPixel : segmentPixels.values()) {
-            for (PixelNeighbor pixelNeighbor : segmentPixel.getPixelNeighbors()) {
-                if ((pixelNeighbor.getDirection() == Direction.EAST ||
-                        pixelNeighbor.getDirection() == Direction.WEST ||
-                        pixelNeighbor.getDirection() == Direction.NORTH ||
-                        pixelNeighbor.getDirection() == Direction.SOUTH) &&
-                        !segmentPixels.containsKey(pixelNeighbor.getNeighbor().getId())) {
+            for (Edge edge : segmentPixel.getEdges()) {
+                if ((edge.getDirection() == Direction.EAST ||
+                        edge.getDirection() == Direction.WEST ||
+                        edge.getDirection() == Direction.NORTH ||
+                        edge.getDirection() == Direction.SOUTH) &&
+                        !segmentPixels.containsKey(edge.getNeighbor().getId())) {
                     convexHull.add(segmentPixel);
                     break;
                 }
@@ -121,12 +113,20 @@ class Segment {
         }
     }
 
+    double getOverallDeviation() {
+        return overallDeviation;
+    }
+
+    double getConnectivity() {
+        return connectivity;
+    }
+
     List<Pixel> getConvexHull() {
         return convexHull;
     }
 
-    Color getCentroidColor() {
-        return centroidColor;
+    Color getCentroidPixelColor() {
+        return centroidPixelColor;
     }
 
     Color getAverageColor() {
