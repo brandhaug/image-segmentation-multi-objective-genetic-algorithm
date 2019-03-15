@@ -57,6 +57,12 @@ class Individual {
         }
     }
 
+    // Empty Individual
+    Individual() {
+        this.segments = new ArrayList<>();
+        this.chromosome = new ArrayList<>(GeneticAlgorithm.initialChromosome);
+    }
+
     /**
      * Baed on Minimum Spanning Tree (MST)
      */
@@ -224,6 +230,10 @@ class Individual {
 
     public boolean isFeasible() {
         return feasible;
+    }
+
+    public void addSegment(Segment segment) {
+        this.segments.add(segment);
     }
 
     @Override

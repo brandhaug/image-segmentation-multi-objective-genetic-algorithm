@@ -50,6 +50,10 @@ class Pixel {
         return y;
     }
 
+    public int getColorSum() {
+        return color.getRed() + color.getGreen() + color.getBlue();
+    }
+
     static void resetIdentification() {
         identification = 0;
     }
