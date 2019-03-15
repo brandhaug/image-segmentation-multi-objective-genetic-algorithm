@@ -4,10 +4,7 @@ import Main.GuiController;
 import Utils.Utils;
 
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents a set of Pixels
@@ -24,8 +21,14 @@ class Segment {
         segmentPixels = new HashMap<>();
     }
 
-    void addSegmentPixel(Pixel pixel) {
+    public void addSegmentPixel(Pixel pixel) {
         segmentPixels.put(pixel.getId(), pixel);
+    }
+
+    public void addSegmentPixels(Collection<Pixel> pixels) {
+        for (Pixel p : pixels) {
+            addSegmentPixel(p);
+        }
     }
 
     Map<Integer, Pixel> getSegmentPixels() {
@@ -59,7 +62,7 @@ class Segment {
      * Used in overall deviation (μ)
      * Also calculates the average color in segment used in drawing on canvas
      */
-    private void calculateCentroidCoordinate() {
+    public void calculateCentroidCoordinate() {
         int averageX = 0;
         int averageY = 0;
 
