@@ -154,7 +154,7 @@ class Individual {
     /**
      * Calculates overall deviation and connectivity
      */
-    private void calculateObjectiveFunctions() {
+    public void calculateObjectiveFunctions() {
         overallDeviation = 0.0;
         connectivity = 0.0;
 
