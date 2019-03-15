@@ -51,14 +51,10 @@ class Population {
         for (int i = 0; i < GeneticAlgorithm.populationSize; i++) {
             executorService.execute(() -> {
                 // Selection
-                Individual parent = tournament();
-                Individual otherParent;
-                do {
-                    otherParent = tournament();
-                } while (parent == otherParent);
+                Individual[] parents = selection();
 
                 // Crossover
-                Individual offspring = crossover2(parent, otherParent);
+                Individual offspring = crossover2(parents[0], parents[1]);
 
                 // Mutation
                 double random = Utils.randomDouble();
@@ -84,9 +80,7 @@ class Population {
             averageSegmentsSize += offspringIndividual.getSegments().size();
         }
 
-        if (offspringIndividuals.size() == 0) {
-            System.out.println("No feasible offspring");
-        } else {
+        if (offspringIndividuals.size() != 0) {
             averageSegmentsSize = averageSegmentsSize / offspringIndividuals.size();
             System.out.println(offspringIndividuals.size() + " feasible offspring");
             System.out.println("Average segment size in offspring: " + averageSegmentsSize);
@@ -99,6 +93,8 @@ class Population {
 
             individuals.sort(Comparator.comparingDouble(Individual::getRank).thenComparing(Individual::getCrowdingDistance, Collections.reverseOrder()));
             individuals = new ArrayList<>(individuals.subList(0, GeneticAlgorithm.populationSize));
+        } else {
+            System.out.println("No feasible offspring");
         }
 
         System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
@@ -185,56 +181,67 @@ class Population {
         }
     }
 
-    private Individual tournament() {
-        List<Individual> tournamentCompetitors = new ArrayList<>();
-        List<Individual> bestRankedCompetitors = new ArrayList<>();
-        int minRank = Integer.MAX_VALUE;
+    /**
+     * Select two parents for reproduction. Parent 1 cannot be the same as parent 2
+     * @return array of the two parents
+     */
+    public Individual[] selection() {
+        Individual parent1 = tournament();
+        Individual parent2 = tournament();
 
-        for (int i = 0; i < GeneticAlgorithm.tournamentSize; i++) {
-            boolean contained = true;
-            Individual competitor = null;
+        while (parent1 == parent2)
+            parent2 = tournament();
 
-            while (contained) {
-                int randomIndex = Utils.randomIndex(individuals.size());
-                competitor = individuals.get(randomIndex);
-                contained = tournamentCompetitors.contains(competitor);
-            }
-
-            tournamentCompetitors.add(competitor);
-
-            if (competitor.getRank() < minRank) {
-                bestRankedCompetitors.clear();
-                bestRankedCompetitors.add(competitor);
-                minRank = competitor.getRank();
-            } else if (competitor.getRank() == minRank) {
-                bestRankedCompetitors.add(competitor);
-            }
-        }
-
-        if (bestRankedCompetitors.size() == 0) {
-            throw new Error("No competitors");
-        }
-
-        if (bestRankedCompetitors.size() == 1) {
-            return bestRankedCompetitors.get(0);
-        }
-
-        double maxCrowdingDistance = -Double.MAX_VALUE;
-        Individual bestCompetitor = null;
-
-        for (Individual competitor : bestRankedCompetitors) {
-            if (competitor.getCrowdingDistance() > maxCrowdingDistance) {
-                bestCompetitor = competitor;
-                maxCrowdingDistance = competitor.getCrowdingDistance();
-            }
-        }
-
-        if (bestCompetitor == null) {
-            throw new NullPointerException("BestCompetitor is null");
-        }
-
-        return bestCompetitor;
+        return new Individual[]{parent1, parent2};
     }
+
+    public Individual tournament() {
+        List<Individual> contestants = new ArrayList<>();
+
+        // Choose contestants
+        for (int i = 0; i < GeneticAlgorithm.tournamentSize; i++) {
+            Individual contestant;
+            do {
+                contestant = individuals.get(Utils.randomIndex(individuals.size()));
+            } while (contestants.contains(contestant));
+            contestants.add(contestant);
+        }
+
+        // Use the first individual as reference by adding it to the tournament list
+        Individual contestant = contestants.get(0);
+        int currentBestRank = contestant.getRank();
+        List<Individual> tournament = new ArrayList<>();
+        tournament.add(contestant);
+
+        // Loop through list of contestants, and remove the individuals with the highest rank
+        for (int i = 1; i < contestants.size(); i++) {
+            contestant = contestants.get(i);
+
+            // If current contestant has better (lower) rank than reference, remove all contestants with lesser rank, and make it the new reference
+            if (contestant.getRank() < currentBestRank) {
+                tournament.clear();
+                tournament.add(contestant);
+                currentBestRank = contestant.getRank();
+            }
+            // If current contestant has equal rank as reference, add it to the next "round" of the tournament
+            else if (contestant.getRank() == currentBestRank) {
+                tournament.add(contestant);
+            }
+        }
+
+        // If there is one individual with better rank than all other contestants, choose that individual
+        if (tournament.size() == 1) {
+            return tournament.get(0);
+        }
+        // Else choose individual with highest crowding distance
+        else {
+            // Sort descending by crowding distance
+            Collections.sort(tournament, (a,b) -> Double.compare(b.getCrowdingDistance(), a.getCrowdingDistance()));
+            return tournament.get(0);
+        }
+    }
+
+
 
     private List<List<Integer>> crossOver(Individual parent, Individual otherParent, int splits) {
         List<List<Integer>> newChromosomes = new ArrayList<>();
