@@ -48,9 +48,7 @@ class Population {
         List<Individual> offspringIndividuals = new ArrayList<>();
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-
-        int loops = GeneticAlgorithm.populationSize;
-        for (int i = 0; i < loops; i++) {
+        for (int i = 0; i < GeneticAlgorithm.populationSize; i++) {
             executorService.execute(() -> {
                 // Selection
                 Individual parent = tournament();
@@ -60,18 +58,15 @@ class Population {
                 } while (parent == otherParent);
 
                 // Crossover
-                //List<List<Integer>> newChromosomes = crossOver(parent, otherParent, GeneticAlgorithm.numberOfSplits);
                 Individual offspring = crossover2(parent, otherParent);
 
                 // Mutation
-                if (offspringIndividuals.size() != GeneticAlgorithm.populationSize) {
-                    double random = Utils.randomDouble();
-                    if (random < GeneticAlgorithm.mutationRate) {
-                        swapMutate(offspring.getChromosome());
-                    }
-
-                    offspringIndividuals.add(offspring);
-            }
+                double random = Utils.randomDouble();
+                if (random < GeneticAlgorithm.mutationRate) {
+                    swapMutate(offspring.getChromosome());
+                }
+                offspring.calculateObjectiveFunctions();
+                offspringIndividuals.add(offspring);
             });
         }
 
@@ -279,7 +274,7 @@ class Population {
      * @return
      */
     private Individual crossover2(Individual parent1, Individual parent2) {
-        Individual offspring = new Individual();
+        Individual offspring = new Individual(); // TODO: Problem here with creating an empty offspring?
 
         // Initialize lists and map
         Map<Integer, Segment> pixelSegmentMap = new HashMap<>();
