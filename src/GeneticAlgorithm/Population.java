@@ -25,7 +25,7 @@ class Population {
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         for (int i = 0; i < GeneticAlgorithm.populationSize; i++) {
             executorService.execute(() -> {
-                Individual individual = new Individual(0);
+                Individual individual = new Individual();
                 individuals.add(individual);
             });
         }
@@ -54,7 +54,7 @@ class Population {
                 Individual[] parents = selection();
 
                 // Crossover
-                Individual offspring = crossover2(parents[0], parents[1]);
+                Individual offspring = crossover2(parents[0], parents[1], generation);
 
                 // Mutation
                 double random = Utils.randomDouble();
@@ -280,8 +280,8 @@ class Population {
      * Create a single offspring from two parents by combining their segments
      * @return
      */
-    private Individual crossover2(Individual parent1, Individual parent2) {
-        Individual offspring = new Individual(); // TODO: Problem here with creating an empty offspring?
+    private Individual crossover2(Individual parent1, Individual parent2, int generation) {
+        Individual offspring = new Individual(generation);
 
         // Initialize lists and map
         Map<Integer, Segment> pixelSegmentMap = new HashMap<>();
@@ -317,21 +317,25 @@ class Population {
 
         // Decide how many segments offspring should have
         int numberOfSegments = Utils.randomInt(GeneticAlgorithm.minSegments, GeneticAlgorithm.maxSegments);
-        int remaingSegmentsToCreate = numberOfSegments - offspring.getSegments().size() > 0 ?
+        int remainingSegmentsToCreate = numberOfSegments - offspring.getSegments().size() > 0 ?
                 numberOfSegments - offspring.getSegments().size() : 1;
 
         if (remainingPixels.size() > 0) {
-            if (remaingSegmentsToCreate > remainingPixels.size()) {
+            if (remainingSegmentsToCreate > remainingPixels.size()) {
                 // Create segments with MST
                 for (Segment s : multipleMST(remainingPixels.size(), remainingPixels, pixelSegmentMap)) {
                     offspring.addSegment(s);
                 }
                 while (offspring.getSegments().size() < numberOfSegments) {
-                    split(offspring.getSegments(), pixelSegmentMap);
+                    // This list will contain three elements: [0] = segment to remove, [1] and [2] is [0] split
+                    List<Segment> segments = split(offspring.getSegments(), pixelSegmentMap);
+                    offspring.removeSegment(segments.get(0));
+                    offspring.addSegment(segments.get(1));
+                    offspring.addSegment(segments.get(2));
                 }
             } else {
                 // Create segments with MST
-                for (Segment s : multipleMST(remaingSegmentsToCreate, remainingPixels, pixelSegmentMap)) {
+                for (Segment s : multipleMST(remainingSegmentsToCreate, remainingPixels, pixelSegmentMap)) {
                     offspring.addSegment(s);
                 }
             }
@@ -381,7 +385,7 @@ class Population {
             List<Segment> neighboringSegments = getNeighborSegments(s, pixelSegmentMap);
 
             for (Segment neighboringSegment : neighboringSegments) {
-                if (random < 0.5) {
+                if (random == 1) {
                     double colorDistance = Utils.getEuclideanColorDistance(s.getCentroidPixelColor(), neighboringSegment.getCentroidPixelColor());
 
                     if (colorDistance < minDistance) {
@@ -439,7 +443,10 @@ class Population {
 
         pixelSegmentMap.values().removeAll(Collections.singleton(segmentToSplit));
         List<Pixel> pixels = new ArrayList<>(segmentToSplit.getSegmentPixels().values());
-        return multipleMST(2, pixels, pixelSegmentMap);
+        List<Segment> newSegments = new ArrayList<>();
+        newSegments.add(segmentToSplit);
+        newSegments.addAll(multipleMST(2, pixels, pixelSegmentMap));
+        return newSegments;
     }
 
     /**

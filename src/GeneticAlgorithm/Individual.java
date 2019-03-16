@@ -33,9 +33,9 @@ class Individual {
 
     private boolean feasible = true;
 
-    Individual(int generation) {
+    Individual() {
         this.chromosome = new ArrayList<>(GeneticAlgorithm.initialChromosome);
-        this.generation = generation;
+        this.generation = 0;
         segments = new ArrayList<>();
         generateInitialIndividual();
         calculateObjectiveFunctions();
@@ -58,7 +58,8 @@ class Individual {
     }
 
     // Empty Individual
-    Individual() {
+    Individual(int generation) {
+        this.generation = generation;
         this.segments = new ArrayList<>();
         this.chromosome = new ArrayList<>(GeneticAlgorithm.initialChromosome);
     }
@@ -234,6 +235,10 @@ class Individual {
 
     public void addSegment(Segment segment) {
         this.segments.add(segment);
+    }
+
+    public void removeSegment(Segment segment) {
+        this.segments.remove(segment);
     }
 
     @Override
