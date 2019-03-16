@@ -25,14 +25,16 @@ import java.util.concurrent.TimeUnit;
 public class GeneticAlgorithm {
 
     // Parameters
-    final static int populationSize = 20; // 20-100 dependent on problem
-    final static double mutationRate = 0.2; // 0.5%-1%.
-    final static int tournamentSize = 3; // Number of members in tournament selection
+    final static int POPULATION_SIZE = 10; // 20-100 dependent on problem
+    final static double MUTATION_RATE = 0.2; // 0.5%-1%.
+    final static int TOURNAMENT_SIZE = 3; // Number of members in tournament selection
 
-    final static int minSegments = 3;
-    final static int maxSegments = 15;
+    final static int MIN_SEGMENTS = 3;
+    final static int MAX_SEGMENTS = 15;
 
-    final static int numberOfSplits = 3;
+    final static int NUMBER_OF_SPLITS = 3;
+
+    static final boolean AVERAGE_COLOR = true;
 
     // True = Multi objective GA
     // False = Weighted sum GA
@@ -40,7 +42,6 @@ public class GeneticAlgorithm {
 
     // Initial lists (read only)
     static List<Pixel> pixels;
-    static List<Integer> initialChromosome; // All pixels pointing to self as default
 
     private int generation = 0;
     private Population population;
@@ -48,7 +49,6 @@ public class GeneticAlgorithm {
 
     public GeneticAlgorithm(Color[][] colorArr) {
         pixels = new ArrayList<>();
-        initialChromosome = new ArrayList<>();
         Pixel.resetIdentification(); // Resets IDs in pixels, so it can be used for list retrieving
         Pixel[][] pixelArr = generateGenes(colorArr);
         findAndAddAllPixelNeighbors(pixelArr);
@@ -79,7 +79,7 @@ public class GeneticAlgorithm {
             }
 
 
-            for (Pixel segmentPixel : segment.getConvexHull()) {
+            for (Pixel segmentPixel : segment.getBoundaryPixels()) {
                 gc2.fillRect(segmentPixel.getX(), segmentPixel.getY(), 1, 1);
                 gc3.fillRect(segmentPixel.getX(), segmentPixel.getY(), 1, 1);
             }
@@ -97,7 +97,6 @@ public class GeneticAlgorithm {
                 Pixel pixel = new Pixel(x, y, colorArr[y][x]);
                 pixelArr[y][x] = pixel;
                 pixels.add(pixel);
-                initialChromosome.add(pixel.getId());
             }
         }
 
@@ -199,7 +198,7 @@ public class GeneticAlgorithm {
 
         for (Segment segment : individual.getSegments()) {
             segment.calculateConvexHull();
-            for (Pixel segmentPixel : segment.getConvexHull()) {
+            for (Pixel segmentPixel : segment.getBoundaryPixels()) {
                 graphics.fillRect(segmentPixel.getX(), segmentPixel.getY(), 1, 1);
             }
         }

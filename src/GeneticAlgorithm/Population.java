@@ -23,9 +23,9 @@ class Population {
         System.out.println("Generating Initial Population");
         final long startTime = System.currentTimeMillis();
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        for (int i = 0; i < GeneticAlgorithm.populationSize; i++) {
+        for (int i = 0; i < GeneticAlgorithm.POPULATION_SIZE; i++) {
             executorService.execute(() -> {
-                Individual individual = new Individual();
+                Individual individual = new Individual(0);
                 individuals.add(individual);
             });
         }
@@ -48,20 +48,21 @@ class Population {
         List<Individual> offspringIndividuals = new ArrayList<>();
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-        for (int i = 0; i < GeneticAlgorithm.populationSize; i++) {
+        for (int i = 0; i < GeneticAlgorithm.POPULATION_SIZE; i++) {
             executorService.execute(() -> {
                 // Selection
                 Individual[] parents = selection();
 
                 // Crossover
-                Individual offspring = crossover2(parents[0], parents[1], generation);
+                List<Segment> newSegments = crossover(parents[0], parents[1]);
 
                 // Mutation
                 double random = Utils.randomDouble();
-                if (random < GeneticAlgorithm.mutationRate) {
-                    swapMutate(offspring.getChromosome());
+                if (random < GeneticAlgorithm.MUTATION_RATE) {
+//                    swapMutate(newSegments);
                 }
-                offspring.calculateObjectiveFunctions();
+
+                Individual offspring = new Individual(newSegments, generation);
                 offspringIndividuals.add(offspring);
             });
         }
@@ -72,30 +73,23 @@ class Population {
         executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
         System.out.println("Segments in " + offspringIndividuals.size() + " offspring individuals calculated in " + ((System.currentTimeMillis() - startTime2) / 1000) + "s");
 
-        // Filter out infeasible offspring
-        offspringIndividuals.removeIf(offspringIndividual -> !offspringIndividual.isFeasible());
-
         int averageSegmentsSize = 0;
         for (Individual offspringIndividual : offspringIndividuals) {
             averageSegmentsSize += offspringIndividual.getSegments().size();
         }
 
-        if (offspringIndividuals.size() != 0) {
-            averageSegmentsSize = averageSegmentsSize / offspringIndividuals.size();
-            System.out.println(offspringIndividuals.size() + " feasible offspring");
-            System.out.println("Average segment size in offspring: " + averageSegmentsSize);
+        averageSegmentsSize = averageSegmentsSize / offspringIndividuals.size();
+        System.out.println(offspringIndividuals.size() + " feasible offspring");
+        System.out.println("Average segment size in offspring: " + averageSegmentsSize);
 
-            // Add offspring to population
-            individuals.addAll(offspringIndividuals);
+        // Add offspring to population
+        individuals.addAll(offspringIndividuals);
 
-            fastNonDominatedSort();
-            calculateCrowdingDistances();
+        fastNonDominatedSort();
+        calculateCrowdingDistances();
 
-            individuals.sort(Comparator.comparingDouble(Individual::getRank).thenComparing(Individual::getCrowdingDistance, Collections.reverseOrder()));
-            individuals = new ArrayList<>(individuals.subList(0, GeneticAlgorithm.populationSize));
-        } else {
-            System.out.println("No feasible offspring");
-        }
+        individuals.sort(Comparator.comparingDouble(Individual::getRank).thenComparing(Individual::getCrowdingDistance, Collections.reverseOrder()));
+        individuals = new ArrayList<>(individuals.subList(0, GeneticAlgorithm.POPULATION_SIZE));
 
         System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
         System.out.println("New generation generated in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
@@ -158,7 +152,7 @@ class Population {
 
     private void calculateCrowdingDistances() {
         // Reset distances
-        for (Individual individual : paretoFront) {
+        for (Individual individual : individuals) {
             individual.setCrowdingDistance(0);
         }
 
@@ -183,132 +177,85 @@ class Population {
 
     /**
      * Select two parents for reproduction. Parent 1 cannot be the same as parent 2
+     *
      * @return array of the two parents
      */
-    public Individual[] selection() {
+    private Individual[] selection() {
         Individual parent1 = tournament();
-        Individual parent2 = tournament();
+        Individual parent2;
 
-        while (parent1 == parent2)
+        do {
             parent2 = tournament();
+        } while (parent1 == parent2);
 
         return new Individual[]{parent1, parent2};
     }
 
-    public Individual tournament() {
+    private Individual tournament() {
         List<Individual> contestants = new ArrayList<>();
+        List<Individual> bestRankedContestants = new ArrayList<>();
+        int minRank = Integer.MAX_VALUE;
 
         // Choose contestants
-        for (int i = 0; i < GeneticAlgorithm.tournamentSize; i++) {
+        for (int i = 0; i < GeneticAlgorithm.TOURNAMENT_SIZE; i++) {
             Individual contestant;
             do {
                 contestant = individuals.get(Utils.randomIndex(individuals.size()));
             } while (contestants.contains(contestant));
+
             contestants.add(contestant);
-        }
 
-        // Use the first individual as reference by adding it to the tournament list
-        Individual contestant = contestants.get(0);
-        int currentBestRank = contestant.getRank();
-        List<Individual> tournament = new ArrayList<>();
-        tournament.add(contestant);
-
-        // Loop through list of contestants, and remove the individuals with the highest rank
-        for (int i = 1; i < contestants.size(); i++) {
-            contestant = contestants.get(i);
-
-            // If current contestant has better (lower) rank than reference, remove all contestants with lesser rank, and make it the new reference
-            if (contestant.getRank() < currentBestRank) {
-                tournament.clear();
-                tournament.add(contestant);
-                currentBestRank = contestant.getRank();
-            }
-            // If current contestant has equal rank as reference, add it to the next "round" of the tournament
-            else if (contestant.getRank() == currentBestRank) {
-                tournament.add(contestant);
+            // Find best contestants
+            if (contestant.getRank() < minRank) {
+                bestRankedContestants.clear();
+                bestRankedContestants.add(contestant);
+                minRank = contestant.getRank();
+            } else if (contestant.getRank() == minRank) {
+                bestRankedContestants.add(contestant);
             }
         }
 
-        // If there is one individual with better rank than all other contestants, choose that individual
-        if (tournament.size() == 1) {
-            return tournament.get(0);
-        }
-        // Else choose individual with highest crowding distance
-        else {
-            // Sort descending by crowding distance
-            Collections.sort(tournament, (a,b) -> Double.compare(b.getCrowdingDistance(), a.getCrowdingDistance()));
-            return tournament.get(0);
-        }
-    }
-
-
-
-    private List<List<Integer>> crossOver(Individual parent, Individual otherParent, int splits) {
-        List<List<Integer>> newChromosomes = new ArrayList<>();
-        int[] partitionIndices = Utils.generatePartitionIndices(parent.getChromosome().size(), splits);
-        List<List<Integer>> partsFromParent = Utils.splitRoute(parent.getChromosome(), partitionIndices, splits);
-        List<List<Integer>> partsFromOtherParent = Utils.splitRoute(otherParent.getChromosome(), partitionIndices, splits);
-
-        List<Integer> newChromosome = new ArrayList<>();
-        List<Integer> newChromosome2 = new ArrayList<>();
-
-        for (int i = 0; i < splits; i++) {
-            if (i % 2 == 0) {
-                newChromosome.addAll(partsFromParent.get(i));
-                newChromosome2.addAll(partsFromOtherParent.get(i));
-            } else {
-                newChromosome.addAll(partsFromOtherParent.get(i));
-                newChromosome2.addAll(partsFromParent.get(i));
-            }
+        if (bestRankedContestants.size() == 0) {
+            throw new Error("No competitors");
         }
 
-        if (newChromosome.size() != parent.getChromosome().size() || newChromosome.size() != newChromosome2.size()) {
-            throw new Error("Chromosomes are different size");
-        }
-
-        newChromosomes.add(newChromosome);
-        newChromosomes.add(newChromosome2);
-
-        for (List<Integer> chromosome : newChromosomes) {
-            repairChromosome(chromosome);
-        }
-
-        return newChromosomes;
+        bestRankedContestants.sort(Comparator.comparingDouble(Individual::getCrowdingDistance).reversed());
+        return bestRankedContestants.get(0);
     }
 
     /**
      * Create a single offspring from two parents by combining their segments
-     * @return
      */
-    private Individual crossover2(Individual parent1, Individual parent2, int generation) {
-        Individual offspring = new Individual(generation);
+    private List<Segment> crossover(Individual parent, Individual otherParent) {
+        List<Segment> newSegments = new ArrayList<>();
 
         // Initialize lists and map
         Map<Integer, Segment> pixelSegmentMap = new HashMap<>();
         boolean[] isAdded = new boolean[GeneticAlgorithm.pixels.size()];
-        List<Segment> allSegments = new ArrayList<>(parent1.getSegments());
-        allSegments.addAll(parent2.getSegments());
+        List<Segment> parentSegments = new ArrayList<>();
+        parentSegments.addAll(parent.getSegments());
+        parentSegments.addAll(otherParent.getSegments());
 
         // Shuffle list of all segments
-        Collections.shuffle(allSegments);
+        Collections.shuffle(parentSegments);
 
         // Loop through every segment, and add segment if it does not contain any pixels that is already assigned to offspring
-        for (Segment s : allSegments) {
-            boolean canAddSegment = true;
-            for (Pixel p : s.getSegmentPixels().values()) {
-                if (pixelSegmentMap.containsKey(p.getId()))
-                    canAddSegment = false;
+        for (Segment segment : parentSegments) {
+            boolean addSegment = true;
+            for (Pixel pixel : segment.getSegmentPixels().values()) {
+                if (pixelSegmentMap.containsKey(pixel.getId()))
+                    addSegment = false;
             }
 
-            if (canAddSegment) {
-                Segment segmentClone = new Segment();
-                for (Pixel p : s.getSegmentPixels().values()) {
-                    segmentClone.addSegmentPixel(p);
-                    pixelSegmentMap.put(p.getId(), segmentClone);
-                    isAdded[p.getId()] = true;
+            if (addSegment) {
+                Segment newSegment = new Segment();
+                for (Pixel pixel : segment.getSegmentPixels().values()) {
+                    newSegment.addSegmentPixel(pixel);
+                    pixelSegmentMap.put(pixel.getId(), newSegment);
+                    isAdded[pixel.getId()] = true;
                 }
 
-                offspring.addSegment(segmentClone);
+                newSegments.add(newSegment);
             }
         }
 
@@ -316,47 +263,47 @@ class Population {
         List<Pixel> remainingPixels = findRemainingPixels(isAdded);
 
         // Decide how many segments offspring should have
-        int numberOfSegments = Utils.randomInt(GeneticAlgorithm.minSegments, GeneticAlgorithm.maxSegments);
-        int remainingSegmentsToCreate = numberOfSegments - offspring.getSegments().size() > 0 ?
-                numberOfSegments - offspring.getSegments().size() : 1;
+        int numberOfSegments = Utils.randomInt(GeneticAlgorithm.MIN_SEGMENTS, GeneticAlgorithm.MAX_SEGMENTS);
+
+        int remainingSegmentsToCreate = numberOfSegments - newSegments.size();
+
+        if (remainingSegmentsToCreate <= 0) {
+            remainingSegmentsToCreate = 1;
+        }
 
         if (remainingPixels.size() > 0) {
             if (remainingSegmentsToCreate > remainingPixels.size()) {
                 // Create segments with MST
-                for (Segment s : multipleMST(remainingPixels.size(), remainingPixels, pixelSegmentMap)) {
-                    offspring.addSegment(s);
-                }
-                while (offspring.getSegments().size() < numberOfSegments) {
-                    // This list will contain three elements: [0] = segment to remove, [1] and [2] is [0] split
-                    List<Segment> segments = split(offspring.getSegments(), pixelSegmentMap);
-                    offspring.removeSegment(segments.get(0));
-                    offspring.addSegment(segments.get(1));
-                    offspring.addSegment(segments.get(2));
+                newSegments.addAll(multipleMST(remainingPixels.size(), remainingPixels, pixelSegmentMap));
+
+                while (newSegments.size() < numberOfSegments) {
+                    List<Segment> segments = splitSegment(newSegments, pixelSegmentMap);
+                    newSegments.add(segments.get(0));
+                    newSegments.add(segments.get(1));
                 }
             } else {
                 // Create segments with MST
-                for (Segment s : multipleMST(remainingSegmentsToCreate, remainingPixels, pixelSegmentMap)) {
-                    offspring.addSegment(s);
-                }
+                newSegments.addAll(multipleMST(remainingSegmentsToCreate, remainingPixels, pixelSegmentMap));
 
                 // Fill in all remaining pixels
                 while (pixelSegmentMap.size() != GeneticAlgorithm.pixels.size()) {
-                    offspring.addSegment(multipleMST(1, remainingPixels, pixelSegmentMap).get(0));
+                    newSegments.add(multipleMST(1, remainingPixels, pixelSegmentMap).get(0));
                 }
             }
         }
 
         // Combine segments if there are too many
-        while (offspring.getSegments().size() > numberOfSegments) {
-            combine(offspring.getSegments(), pixelSegmentMap);
+        while (newSegments.size() > numberOfSegments) {
+            combineSegments(newSegments, pixelSegmentMap);
         }
 
-        return offspring;
+        return newSegments;
     }
 
     /**
      * Return a list of the pixels that remains to be added to an offspring in the crossover method. This is done by
      * adding the pixels which is at index i in isAdded if that element is false
+     *
      * @param isAdded a list of length GeneticAlgorithm.pixels, if true pixel is already added to offspring
      * @return list of pixels that remain to be added
      */
@@ -364,21 +311,23 @@ class Population {
         List<Pixel> remainingPixels = new ArrayList<>();
 
         for (int i = 0; i < isAdded.length; i++) {
-            if (!isAdded[i])
+            if (!isAdded[i]) {
                 remainingPixels.add(GeneticAlgorithm.pixels.get(i));
+            }
         }
         return remainingPixels;
     }
 
     /**
      * Collapse two neighboring segments by finding the two neighboring segments with lowest color distance
-     * @param segments list of segments to check
+     *
+     * @param segments        list of segments to check
      * @param pixelSegmentMap mapping of what segment a pixel belongs to
      */
-    private void combine(List<Segment> segments, Map<Integer, Segment> pixelSegmentMap) {
+    private void combineSegments(List<Segment> segments, Map<Integer, Segment> pixelSegmentMap) {
         // Update centroid for every segment
-        for (Segment s : segments) {
-            s.calculateCentroidCoordinate();
+        for (Segment segment : segments) {
+            segment.calculateAverageColor();
         }
 
         Segment segment1 = null, segment2 = null;
@@ -386,24 +335,23 @@ class Population {
 
         double minDistance = Integer.MAX_VALUE, minSize = Integer.MAX_VALUE;
 
-        for (Segment s : segments) {
-            List<Segment> neighboringSegments = getNeighborSegments(s, pixelSegmentMap);
+        for (Segment segment : segments) {
+            List<Segment> neighboringSegments = getNeighborSegments(segment, pixelSegmentMap);
 
-            for (Segment neighboringSegment : neighboringSegments) {
+            for (Segment segmentNeighbor : neighboringSegments) {
                 if (random == 1) {
-                    double colorDistance = Utils.getEuclideanColorDistance(s.getCentroidPixelColor(), neighboringSegment.getCentroidPixelColor());
+                    double colorDistance = Utils.getEuclideanColorDistance(segment.getAverageColor(), segmentNeighbor.getAverageColor());
 
                     if (colorDistance < minDistance) {
-                        segment1 = s;
-                        segment2 = neighboringSegment;
+                        segment1 = segment;
+                        segment2 = segmentNeighbor;
                         minDistance = colorDistance;
                     }
-                }
-                else {
-                    int segmentSize = neighboringSegment.getSegmentPixels().size();
+                } else {
+                    int segmentSize = segmentNeighbor.getSegmentPixels().size();
                     if (segmentSize < minSize) {
-                        segment1 = s;
-                        segment2 = neighboringSegment;
+                        segment1 = segment;
+                        segment2 = segmentNeighbor;
                         minSize = segmentSize;
                     }
                 }
@@ -413,50 +361,53 @@ class Population {
         Objects.requireNonNull(segment1).addSegmentPixels(segment2.getSegmentPixels().values());
         segments.remove(segment2);
 
-        for (Pixel p : segment2.getSegmentPixels().values()) {
-            pixelSegmentMap.put(p.getId(), segment1);
+        for (Pixel pixel : segment2.getSegmentPixels().values()) {
+            pixelSegmentMap.put(pixel.getId(), segment1);
         }
     }
 
     /**
      * Split a segment by finding the segment with largest color difference
-     * @param segments segments to check
+     *
+     * @param segments        segments to check
      * @param pixelSegmentMap map of what segment a pixel belongs to
      * @return Two new segments
      */
-    private List<Segment> split(List<Segment> segments, Map<Integer, Segment> pixelSegmentMap) {
-        int minColor = Integer.MAX_VALUE, maxColor = Integer.MIN_VALUE;
+    private List<Segment> splitSegment(List<Segment> segments, Map<Integer, Segment> pixelSegmentMap) {
+        Segment segmentToSplit = findSegmentToSplit(segments);
+
+        pixelSegmentMap.values().removeAll(Collections.singleton(segmentToSplit));
+        segments.remove(segmentToSplit);
+
+        List<Pixel> pixels = new ArrayList<>(segmentToSplit.getSegmentPixels().values());
+        return new ArrayList<>(multipleMST(2, pixels, pixelSegmentMap));
+    }
+
+    /**
+     * Finds segment with highest overall deviations
+     */
+    private Segment findSegmentToSplit(List<Segment> segments) {
+        double maxOverallDeviation = Double.MIN_VALUE;
 
         Segment segmentToSplit = null;
 
-        // Find what segment to split
-        for (Segment s : segments) {
-            int tempMinColor = Integer.MAX_VALUE, tempMaxColor = Integer.MIN_VALUE;
+        for (Segment segment : segments) {
+            segment.calculateObjectiveFunctions();
+            double overallDeviation = segment.getOverallDeviation();
 
-            for (Pixel p : s.getSegmentPixels().values()) {
-                if (p.getColorSum() > tempMaxColor)
-                    tempMaxColor = p.getColorSum();
-                else if (p.getColorSum() < tempMinColor)
-                    tempMinColor = p.getColorSum();
-            }
-            if (tempMinColor < minColor && tempMaxColor > maxColor) {
-                segmentToSplit = s;
-                minColor = tempMinColor;
-                maxColor = tempMaxColor;
+            if (overallDeviation > maxOverallDeviation) {
+                segmentToSplit = segment;
+                maxOverallDeviation = overallDeviation;
             }
         }
 
-        pixelSegmentMap.values().removeAll(Collections.singleton(segmentToSplit));
-        List<Pixel> pixels = new ArrayList<>(segmentToSplit.getSegmentPixels().values());
-        List<Segment> newSegments = new ArrayList<>();
-        newSegments.add(segmentToSplit);
-        newSegments.addAll(multipleMST(2, pixels, pixelSegmentMap));
-        return newSegments;
+        return segmentToSplit;
     }
 
     /**
      * Find all neighboring segments of a specific segment
-     * @param segment segment to locate its neighbors
+     *
+     * @param segment             segment to locate its neighbors
      * @param pixelSegmentHashMap mapping of what segment a pixel belongs to
      * @return all neighboring segments of Segment segment
      */
@@ -479,8 +430,9 @@ class Population {
 
     /**
      * Build multiple MSTs (Minimum spanning tree) from the pixels in list pixels.
-     * @param numberOfTrees Number of trees to be made
-     * @param pixels The list of pixels to build MSTs around
+     *
+     * @param numberOfTrees   Number of trees to be made
+     * @param pixels          The list of pixels to build MSTs around
      * @param pixelSegmentMap Map of what segment a pixel belongs to already
      * @return multiple new segments aka MSTs with regard to color distance
      */
@@ -488,17 +440,16 @@ class Population {
         Queue<Edge> availableNeighbors = new PriorityQueue<>();
         List<Segment> newSegments = new ArrayList<>();
         for (int i = 0; i < numberOfTrees; i++) {
-            Pixel p;
+            Pixel pixel;
             do {
-                p = pixels.get(Utils.randomIndex(pixels.size()));
-            }
-            while (pixelSegmentMap.containsKey(p.getId()));
+                pixel = pixels.get(Utils.randomIndex(pixels.size()));
+            } while (pixelSegmentMap.containsKey(pixel.getId()));
 
             Segment segment = new Segment();
-            segment.addSegmentPixel(p);
-            pixelSegmentMap.put(p.getId(), segment);
+            segment.addSegmentPixel(pixel);
+            pixelSegmentMap.put(pixel.getId(), segment);
             newSegments.add(segment);
-            availableNeighbors.addAll(p.getEdges());
+            availableNeighbors.addAll(pixel.getEdges());
         }
 
         while (!availableNeighbors.isEmpty()) {
@@ -515,51 +466,6 @@ class Population {
         }
 
         return newSegments;
-    }
-
-    private void repairChromosome(List<Integer> chromosome) {
-        for (int pixelId = 0; pixelId < chromosome.size(); pixelId++) {
-            Queue<Edge> priorityQueue = new PriorityQueue<>();
-            boolean repaired = true;
-            int neighborId = chromosome.get(pixelId);
-
-            if (pixelId != neighborId && chromosome.get(neighborId) == pixelId) {
-                repaired = false;
-            }
-
-            while (!repaired) {
-                // Pixel and neighbor pointing to eachother
-                priorityQueue.addAll(GeneticAlgorithm.pixels.get(pixelId).getEdges());
-
-                while (!priorityQueue.isEmpty()) {
-                    Pixel potentialNeighbor = priorityQueue.poll().getNeighbor();
-
-                    if (chromosome.get(potentialNeighbor.getId()) != pixelId) {
-                        chromosome.set(pixelId, potentialNeighbor.getId());
-                        repaired = true;
-                        break;
-                    }
-                }
-
-                // No neighbors possible, pointing to self
-                if (!repaired) {
-                    System.out.println("No neighbors possible");
-                    chromosome.set(pixelId, pixelId);
-                    repaired = true;
-                }
-            }
-        }
-
-
-//        int counter = 0;
-//        for (int pixelId = 0; pixelId < chromosome.size(); pixelId++) {
-//            int neighborId = chromosome.get(pixelId);
-//
-//            if (chromosome.get(neighborId) == pixelId) {
-//                counter++;
-//            }
-//        }
-//        System.out.println(counter);
     }
 
     private void swapMutate(List<Integer> chromosome) {
