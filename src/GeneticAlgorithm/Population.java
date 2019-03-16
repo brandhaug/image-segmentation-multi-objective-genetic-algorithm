@@ -338,6 +338,11 @@ class Population {
                 for (Segment s : multipleMST(remainingSegmentsToCreate, remainingPixels, pixelSegmentMap)) {
                     offspring.addSegment(s);
                 }
+
+                // Fill in all remaining pixels
+                while (pixelSegmentMap.size() != GeneticAlgorithm.pixels.size()) {
+                    offspring.addSegment(multipleMST(1, remainingPixels, pixelSegmentMap).get(0));
+                }
             }
         }
 
