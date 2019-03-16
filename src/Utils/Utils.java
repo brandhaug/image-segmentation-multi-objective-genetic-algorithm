@@ -62,31 +62,6 @@ public class Utils {
     }
 
     /**
-     * Splits Chromosome in k parts
-     */
-    public static List<List<Integer>> splitRoute(List<Integer> chromosome, int[] partitionIndices, int k) {
-        List<List<Integer>> parts = new ArrayList<>();
-
-        for (int i = 0; i < k; i++) {
-            parts.add(new ArrayList<>());
-        }
-
-        for (int i = 0; i < chromosome.size(); i++) {
-            for (int j = 0; j < partitionIndices.length; j++) {
-                if (i < partitionIndices[j]) {
-                    parts.get(j).add(chromosome.get(i));
-                    break;
-                } else if (i >= partitionIndices[partitionIndices.length - 1]) {
-                    parts.get(parts.size() - 1).add(chromosome.get(i));
-                    break;
-                }
-            }
-        }
-
-        return parts;
-    }
-
-    /**
      * Rounds a double value to n decimals
      * https://stackoverflow.com/questions/2808535/round-a-double-to-2-decimal-places
      */

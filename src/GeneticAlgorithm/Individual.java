@@ -7,15 +7,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.LinkedList;
 
 /**
  * Represents one chromosome
  */
 class Individual {
     // Lists
-    private List<Integer> chromosome; // List of genes (pixels)
     private List<Segment> segments; // List of segments (set of pixels)
 
     // Objective functions
@@ -31,39 +28,27 @@ class Individual {
 
     private int generation;
 
-    private boolean feasible = true;
-
-    Individual() {
-        this.chromosome = new ArrayList<>(GeneticAlgorithm.initialChromosome);
-        this.generation = 0;
+    Individual(int generation) {
+        this.generation = generation;
         segments = new ArrayList<>();
         generateInitialIndividual();
         calculateObjectiveFunctions();
     }
 
-    Individual(List<Integer> chromosome, int generation) {
-        this.chromosome = new ArrayList<>(chromosome);
+    Individual(List<Segment> segments, int generation) {
         this.generation = generation;
-        segments = new ArrayList<>();
-        calculateSegments();
+        this.segments = new ArrayList<>(segments);
         calculateObjectiveFunctions();
     }
 
-    // Empty Individual
-    Individual(int generation) {
-        this.generation = generation;
-        this.segments = new ArrayList<>();
-        this.chromosome = new ArrayList<>(GeneticAlgorithm.initialChromosome);
-    }
-
     /**
-     * Baed on Minimum Spanning Tree (MST)
+     * Based on Minimum Spanning Tree (MST)
      */
     private void generateInitialIndividual() {
         Map<Integer, Segment> visitedPixels = new HashMap<>();
         PriorityQueue<Edge> possibleNeighbors = new PriorityQueue<>(); // Support array for all possible visits. Sorted by colorDistance
 
-        int numberOfSegments = Utils.randomInt(GeneticAlgorithm.minSegments, GeneticAlgorithm.maxSegments);
+        int numberOfSegments = Utils.randomInt(GeneticAlgorithm.MIN_SEGMENTS, GeneticAlgorithm.MAX_SEGMENTS);
 
         // Initialize segments, add neighbors of root pixels
         while (segments.size() != numberOfSegments) {
@@ -92,54 +77,8 @@ class Individual {
             if (!visitedPixels.containsKey(bestNeighbor.getId())) {
                 possibleNeighbors.addAll(bestNeighbor.getEdges());
                 visitedPixels.put(bestNeighbor.getId(), segment);
-                chromosome.set(bestNeighbor.getId(), bestPixel.getId());
                 segment.addSegmentPixel(bestNeighbor);
             }
-        }
-    }
-
-    /**
-     * Creates segments based on chromosome
-     */
-    private void calculateSegments() {
-        Map<Pixel, Segment> visitedPixels = new HashMap<>();
-        Queue<Edge> possibleEdges = new LinkedList<>();
-
-        for (int pixelId = 0; pixelId < chromosome.size(); pixelId++) {
-            Pixel pixel = GeneticAlgorithm.pixels.get(pixelId);
-
-            if (!visitedPixels.containsKey(pixel)) {
-                Segment newSegment = new Segment();
-                newSegment.addSegmentPixel(pixel);
-                segments.add(newSegment);
-
-                if (segments.size() > GeneticAlgorithm.maxSegments) {
-                    feasible = false;
-                    break;
-                }
-
-                visitedPixels.put(pixel, newSegment);
-
-                List<Edge> edges = GeneticAlgorithm.pixels.get(pixelId).getEdges();
-                possibleEdges.addAll(edges);
-
-                while (!possibleEdges.isEmpty()) {
-                    Edge edge = possibleEdges.poll();
-                    Pixel selectedNeighbor = edge.getNeighbor();
-                    Pixel selectedPixel = edge.getPixel();
-
-                    if (!visitedPixels.containsKey(selectedNeighbor) && (chromosome.get(selectedNeighbor.getId()) == selectedPixel.getId() || chromosome.get(selectedPixel.getId()) == selectedNeighbor.getId())) {
-                        Segment segment = visitedPixels.get(selectedPixel);
-                        segment.addSegmentPixel(selectedNeighbor);
-                        possibleEdges.addAll(selectedNeighbor.getEdges());
-                        visitedPixels.put(selectedNeighbor, segment);
-                    }
-                }
-            }
-        }
-
-        if (segments.size() < GeneticAlgorithm.minSegments) {
-            feasible = false;
         }
     }
 
@@ -155,7 +94,7 @@ class Individual {
     /**
      * Calculates overall deviation and connectivity
      */
-    public void calculateObjectiveFunctions() {
+    private void calculateObjectiveFunctions() {
         overallDeviation = 0.0;
         connectivity = 0.0;
 
@@ -213,24 +152,8 @@ class Individual {
         return crowdingDistance;
     }
 
-    List<Integer> getChromosome() {
-        return chromosome;
-    }
-
     int getGeneration() {
         return generation;
-    }
-
-    public boolean isFeasible() {
-        return feasible;
-    }
-
-    public void addSegment(Segment segment) {
-        this.segments.add(segment);
-    }
-
-    public void removeSegment(Segment segment) {
-        this.segments.remove(segment);
     }
 
     @Override
