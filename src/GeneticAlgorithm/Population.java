@@ -33,10 +33,12 @@ class Population {
         executorService.shutdown();
         executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
-        fastNonDominatedSort();
-        calculateCrowdingDistances();
+        if (GeneticAlgorithm.multiObjective) {
+            fastNonDominatedSort();
+            calculateCrowdingDistances();
+            System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
+        }
 
-        System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
         System.out.println(individuals.size() + " individuals created in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
     }
 
@@ -48,12 +50,19 @@ class Population {
         List<Individual> offspringIndividuals = new ArrayList<>();
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-
         int loops = GeneticAlgorithm.populationSize / 2; // Because crossover produces 2 children
         for (int i = 0; i < loops; i++) {
             // Selection
-            Individual parent = tournament();
-            Individual otherParent = tournament();
+            Individual parent;
+            Individual otherParent;
+
+            if (GeneticAlgorithm.multiObjective) {
+                parent = tournament();
+                otherParent = tournament();
+            } else {
+                parent = simpleTournament();
+                otherParent = simpleTournament();
+            }
 
             // Crossover
             List<List<Integer>> newChromosomes = crossOver(parent, otherParent, GeneticAlgorithm.numberOfSplits);
@@ -99,14 +108,21 @@ class Population {
             // Add offspring to population
             individuals.addAll(offspringIndividuals);
 
-            fastNonDominatedSort();
-            calculateCrowdingDistances();
+            if (GeneticAlgorithm.multiObjective) {
+                fastNonDominatedSort();
+                calculateCrowdingDistances();
 
-            individuals.sort(Comparator.comparingDouble(Individual::getRank).thenComparing(Individual::getCrowdingDistance, Collections.reverseOrder()));
+                individuals.sort(Comparator.comparingDouble(Individual::getRank).thenComparing(Individual::getCrowdingDistance, Collections.reverseOrder()));
+            } else {
+                individuals.sort(Comparator.comparingDouble(Individual::getFitness));
+            }
+
             individuals = new ArrayList<>(individuals.subList(0, GeneticAlgorithm.populationSize));
         }
 
-        System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
+        if (GeneticAlgorithm.multiObjective) {
+            System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
+        }
         System.out.println("New generation generated in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
     }
 
@@ -241,6 +257,23 @@ class Population {
         return bestCompetitor;
     }
 
+    private Individual simpleTournament() {
+        List<Individual> tournamentMembers = new ArrayList<>();
+
+        for (int i = 0; i < GeneticAlgorithm.tournamentSize; i++) {
+            boolean contained = true;
+            Individual member = null;
+            while (contained) {
+                int randomIndex = Utils.randomIndex(individuals.size());
+                member = individuals.get(randomIndex);
+                contained = tournamentMembers.contains(member);
+            }
+            tournamentMembers.add(member);
+        }
+        tournamentMembers.sort(Comparator.comparingDouble(Individual::getFitness));
+        return tournamentMembers.get(0);
+    }
+
     private List<List<Integer>> crossOver(Individual parent, Individual otherParent, int splits) {
         List<List<Integer>> newChromosomes = new ArrayList<>();
         int[] partitionIndices = Utils.generatePartitionIndices(parent.getChromosome().size(), splits);
@@ -330,14 +363,20 @@ class Population {
     List<Segment> getRandomParetoSegments() {
         int randomIndex;
         Individual individual;
-        do {
-            randomIndex = Utils.randomIndex(individuals.size());
-            individual = individuals.get(randomIndex);
-        } while (individual.getRank() != 1);
+
+
+        if (GeneticAlgorithm.multiObjective) {
+            do {
+                randomIndex = Utils.randomIndex(individuals.size());
+                individual = individuals.get(randomIndex);
+            } while (individual.getRank() != 1);
+        } else {
+            individual = individuals.get(0);
+        }
 
         individual.calculateConvexHulls();
 
-        return individuals.get(randomIndex).getSegments();
+        return individual.getSegments();
     }
 
     List<Individual> getIndividuals() {

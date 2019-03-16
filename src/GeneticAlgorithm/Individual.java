@@ -39,6 +39,10 @@ class Individual {
         segments = new ArrayList<>();
         generateInitialIndividual();
         calculateObjectiveFunctions();
+
+        if (!GeneticAlgorithm.multiObjective) {
+            calculateFitness();
+        }
     }
 
     Individual(List<Integer> chromosome, int generation) {
@@ -47,6 +51,10 @@ class Individual {
         segments = new ArrayList<>();
         calculateSegments();
         calculateObjectiveFunctions();
+
+        if (!GeneticAlgorithm.multiObjective) {
+            calculateFitness();
+        }
     }
 
     /**

@@ -34,13 +34,17 @@ public class GeneticAlgorithm {
 
     final static int numberOfSplits = 3;
 
-    private Population population;
+    // True = Multi objective GA
+    // False = Weighted sum GA
+    final static boolean multiObjective = true;
 
     // Initial lists (read only)
     static List<Pixel> pixels;
     static List<Integer> initialChromosome; // All pixels pointing to self as default
 
     private int generation = 0;
+    private Population population;
+
 
     public GeneticAlgorithm(Color[][] colorArr) {
         pixels = new ArrayList<>();
@@ -162,7 +166,8 @@ public class GeneticAlgorithm {
         return paretoData;
     }
 
-    public void saveParetoOptimalIndividualsToFile(String fileName, Timestamp timestamp) throws InterruptedException {
+    public void saveParetoOptimalIndividualsToFile(String fileName, Timestamp timestamp) throws
+            InterruptedException {
         List<Individual> individuals = population.getIndividuals();
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
@@ -184,7 +189,8 @@ public class GeneticAlgorithm {
         executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
     }
 
-    private void saveIndividualToImageFile(Individual individual, int individualIndex, String fileName, Timestamp timestamp) throws IOException {
+    private void saveIndividualToImageFile(Individual individual, int individualIndex, String fileName, Timestamp
+            timestamp) throws IOException {
         BufferedImage image = new BufferedImage(GuiController.imageWidth, GuiController.imageHeight, BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics = image.createGraphics();
         graphics.setColor(Color.WHITE);
@@ -198,7 +204,7 @@ public class GeneticAlgorithm {
             }
         }
 
-        File jpegFile = new File("solution=" + fileName + "_time=" + timestamp.getTime() + "_gen=" + individual.getGeneration() + "_seg=" + individual.getSegments().size() +  "_i=" + individualIndex + ".jpg");
+        File jpegFile = new File("solution=" + fileName + "_time=" + timestamp.getTime() + "_gen=" + individual.getGeneration() + "_seg=" + individual.getSegments().size() + "_i=" + individualIndex + ".jpg");
         ImageIO.write(image, "jpg", jpegFile);
     }
 
