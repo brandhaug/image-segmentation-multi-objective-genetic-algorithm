@@ -34,7 +34,7 @@ class Individual {
         generateInitialIndividual();
         calculateObjectiveFunctions();
 
-        if (!GeneticAlgorithm.multiObjective) {
+        if (!GeneticAlgorithm.MULTI_OBJECTIVE) {
             calculateFitness();
         }
     }
@@ -44,7 +44,7 @@ class Individual {
         this.segments = new ArrayList<>(segments);
         calculateObjectiveFunctions();
 
-        if (!GeneticAlgorithm.multiObjective) {
+        if (!GeneticAlgorithm.MULTI_OBJECTIVE) {
             calculateFitness();
         }
     }

@@ -38,7 +38,7 @@ public class GeneticAlgorithm {
 
     // True = Multi objective GA
     // False = Weighted sum GA
-    final static boolean multiObjective = true;
+    final static boolean MULTI_OBJECTIVE = false;
 
     // Initial lists (read only)
     static List<Pixel> pixels;

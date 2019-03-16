@@ -33,10 +33,12 @@ class Population {
         executorService.shutdown();
         executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
-        fastNonDominatedSort();
-        calculateCrowdingDistances();
+        if (GeneticAlgorithm.MULTI_OBJECTIVE) {
+            fastNonDominatedSort();
+            calculateCrowdingDistances();
 
-        System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
+            System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
+        }
         System.out.println(individuals.size() + " individuals created in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
     }
 
@@ -85,13 +87,20 @@ class Population {
         // Add offspring to population
         individuals.addAll(offspringIndividuals);
 
-        fastNonDominatedSort();
-        calculateCrowdingDistances();
+        if (GeneticAlgorithm.MULTI_OBJECTIVE) {
+            fastNonDominatedSort();
+            calculateCrowdingDistances();
 
-        individuals.sort(Comparator.comparingDouble(Individual::getRank).thenComparing(Individual::getCrowdingDistance, Collections.reverseOrder()));
+            individuals.sort(Comparator.comparingDouble(Individual::getRank).thenComparing(Individual::getCrowdingDistance, Collections.reverseOrder()));
+        } else {
+            individuals.sort(Comparator.comparingDouble(Individual::getFitness));
+        }
+
         individuals = new ArrayList<>(individuals.subList(0, GeneticAlgorithm.POPULATION_SIZE));
 
-        System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
+        if (GeneticAlgorithm.MULTI_OBJECTIVE) {
+            System.out.println("Number of pareto optimal solutions: " + paretoFront.size());
+        }
         System.out.println("New generation generated in " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
     }
 
@@ -181,14 +190,25 @@ class Population {
      * @return array of the two parents
      */
     private Individual[] selection() {
-        Individual parent1 = tournament();
-        Individual parent2;
+        if (GeneticAlgorithm.MULTI_OBJECTIVE) {
+            Individual parent1 = tournament();
+            Individual parent2;
 
-        do {
-            parent2 = tournament();
-        } while (parent1 == parent2);
+            do {
+                parent2 = tournament();
+            } while (parent1 == parent2);
 
-        return new Individual[]{parent1, parent2};
+            return new Individual[]{parent1, parent2};
+        } else {
+            Individual parent1 = simpleTournament();
+            Individual parent2;
+
+            do {
+                parent2 = tournament();
+            } while (parent1 == parent2);
+
+            return new Individual[]{parent1, parent2};
+        }
     }
 
     private Individual tournament() {
@@ -221,6 +241,23 @@ class Population {
 
         bestRankedContestants.sort(Comparator.comparingDouble(Individual::getCrowdingDistance).reversed());
         return bestRankedContestants.get(0);
+    }
+
+    private Individual simpleTournament() {
+        List<Individual> tournamentMembers = new ArrayList<>();
+
+        for (int i = 0; i < GeneticAlgorithm.TOURNAMENT_SIZE; i++) {
+            boolean contained = true;
+            Individual member = null;
+            while (contained) {
+                int randomIndex = Utils.randomIndex(individuals.size());
+                member = individuals.get(randomIndex);
+                contained = tournamentMembers.contains(member);
+            }
+            tournamentMembers.add(member);
+        }
+        tournamentMembers.sort(Comparator.comparingDouble(Individual::getFitness));
+        return tournamentMembers.get(0);
     }
 
     /**
@@ -478,14 +515,20 @@ class Population {
     List<Segment> getRandomParetoSegments() {
         int randomIndex;
         Individual individual;
-        do {
-            randomIndex = Utils.randomIndex(individuals.size());
-            individual = individuals.get(randomIndex);
-        } while (individual.getRank() != 1);
+
+
+        if (GeneticAlgorithm.MULTI_OBJECTIVE) {
+            do {
+                randomIndex = Utils.randomIndex(individuals.size());
+                individual = individuals.get(randomIndex);
+            } while (individual.getRank() != 1);
+        } else {
+            individual = individuals.get(0);
+        }
 
         individual.calculateConvexHulls();
 
-        return individuals.get(randomIndex).getSegments();
+        return individual.getSegments();
     }
 
     List<Individual> getIndividuals() {
