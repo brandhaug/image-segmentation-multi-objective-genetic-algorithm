@@ -62,6 +62,7 @@ class Population {
                 double random = Utils.randomDouble();
                 if (random < GeneticAlgorithm.MUTATION_RATE) {
 //                    swapMutate(newSegments);
+                    splitCombineMutate(newSegments);
                 }
 
                 Individual offspring = new Individual(newSegments, generation);
@@ -372,6 +373,7 @@ class Population {
 
         double minDistance = Integer.MAX_VALUE, minSize = Integer.MAX_VALUE;
 
+        // Find what segments to combine
         for (Segment segment : segments) {
             List<Segment> neighboringSegments = getNeighborSegments(segment, pixelSegmentMap);
 
@@ -510,6 +512,39 @@ class Population {
         int randomNeighborIndex = Utils.randomIndex(GeneticAlgorithm.pixels.get(indexA).getEdges().size());
         int indexB = GeneticAlgorithm.pixels.get(indexA).getEdges().get(randomNeighborIndex).getNeighbor().getId();
         Collections.swap(chromosome, indexA, indexB);
+    }
+
+    /**
+     * Mutate offspring by either combining or splitting one of its segments.
+     * There is a 50/50 chance if it is going to split or combine.
+     * When combining, this method will locate the two most similar segments, and combining them.
+     * When splitting, this method will locate the segment with highest color diversity and splitting it
+     * @param segments Segments of the individual to mutate
+     */
+    private void splitCombineMutate(List<Segment> segments) {
+        // Choose which operation to use
+        int operation = Utils.randomInt(0, 1);
+
+        // Map what segment each pixel belongs to
+        Map<Integer, Segment> pixelSegmentMap = new HashMap<>();
+        for (Segment s : segments) {
+            for (Pixel p : s.getSegmentPixels().values()) {
+                pixelSegmentMap.put(p.getId(), s);
+            }
+        }
+
+        // Split operation
+        if (operation == 1 && segments.size() < GeneticAlgorithm.MAX_SEGMENTS || segments.size() == GeneticAlgorithm.MIN_SEGMENTS) {
+            List<Segment> splitSegment = splitSegment(segments, pixelSegmentMap);
+            segments.add(splitSegment.get(0));
+            segments.add(splitSegment.get(1));
+        }
+        // Combine operation
+        else {
+            combineSegments(segments, pixelSegmentMap);
+        }
+
+        // Påse at offspring har alle pixler
     }
 
     List<Segment> getRandomParetoSegments() {
