@@ -38,7 +38,7 @@ public class GeneticAlgorithm {
 
     // True = Multi objective GA
     // False = Weighted sum GA
-    final static boolean MULTI_OBJECTIVE = false;
+    final static boolean MULTI_OBJECTIVE = true;
 
     // Weights for weighted sum GA
     final static double OVERALL_DEVIATION_WEIGHT = 0.05;
