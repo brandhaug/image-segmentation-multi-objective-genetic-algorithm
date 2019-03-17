@@ -372,6 +372,7 @@ class Population {
 
         double minDistance = Integer.MAX_VALUE, minSize = Integer.MAX_VALUE;
 
+        // Find what segments to combine
         for (Segment segment : segments) {
             List<Segment> neighboringSegments = getNeighborSegments(segment, pixelSegmentMap);
 
@@ -393,6 +394,10 @@ class Population {
                     }
                 }
             }
+        }
+
+        if (segment1 == null) {
+            System.out.println("hello");
         }
 
         Objects.requireNonNull(segment1).addSegmentPixels(segment2.getSegmentPixels().values());

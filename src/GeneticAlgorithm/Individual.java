@@ -125,7 +125,7 @@ class Individual {
      * Calculates fitness for simple GA
      */
     private void calculateFitness() {
-        fitness = overallDeviation + connectivity;
+        fitness = (overallDeviation * GeneticAlgorithm.OVERALL_DEVIATION_WEIGHT) + (connectivity * GeneticAlgorithm.CONNECTIVITY_WEIGHT);
     }
 
     List<Segment> getSegments() {

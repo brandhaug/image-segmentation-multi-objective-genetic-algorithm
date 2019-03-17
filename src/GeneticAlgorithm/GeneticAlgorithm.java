@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class GeneticAlgorithm {
 
     // Parameters
-    final static int POPULATION_SIZE = 10; // 20-100 dependent on problem
+    final static int POPULATION_SIZE = 20; // 20-100 dependent on problem
     final static double MUTATION_RATE = 0.2; // 0.5%-1%.
     final static int TOURNAMENT_SIZE = 3; // Number of members in tournament selection
 
@@ -39,6 +39,10 @@ public class GeneticAlgorithm {
     // True = Multi objective GA
     // False = Weighted sum GA
     final static boolean MULTI_OBJECTIVE = false;
+
+    // Weights for weighted sum GA
+    final static double OVERALL_DEVIATION_WEIGHT = 0.05;
+    final static double CONNECTIVITY_WEIGHT = 1;
 
     // Initial lists (read only)
     static List<Pixel> pixels;
